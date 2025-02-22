@@ -1,8 +1,14 @@
 import logging
-from fastapi import FastAPI
+import json
+import os
+
+from dotenv import load_dotenv
+from fastapi import FastAPI, Request, Reponse, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 
 app = FastAPI(title="Backend for stocks opinion analysis")
+
 # add logging
 logger = logging.getLogger(__name__)
 ### handler ###
@@ -21,3 +27,7 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+@app.post("/complete")
+async def complete_chat(request: Request, completion_request: CompletionRequest) -> dict:
+    return {"message": "Hello World"}
