@@ -1,6 +1,6 @@
+import logging
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-import logging
 
 app = FastAPI(title="Backend for stocks opinion analysis")
 # add logging
@@ -21,7 +21,3 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-@app.get("/")
-async def root():
-    return {"message": "Hello World"}
