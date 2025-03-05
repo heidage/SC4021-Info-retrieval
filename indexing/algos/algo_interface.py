@@ -4,7 +4,9 @@ from typing import Dict, Union, Literal
 import pandas as pd
 
 import sys
+sys.path.append("..")
 
+from utils.evaluation.algo_types import AlgoType
 class IAlgo:
 
     @abstractmethod
@@ -14,6 +16,14 @@ class IAlgo:
         :param query: String to be used in the search
         :param k: Number of records to return
         :return: DataFrame with the results
+        """
+        raise NotImplementedError
+    
+    @abstractmethod
+    def name(self) -> AlgoType:
+        """
+        Method to return the name of the algorithm class
+        :return: str, name of the algo class
         """
         raise NotImplementedError
     
