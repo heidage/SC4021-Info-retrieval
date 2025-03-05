@@ -11,6 +11,7 @@ sys.path.append("..")
 import pandas as pd
 import numpy as np
 from algos.algo_interface import IAlgo
+from utils.evaluation.algo_types import AlgoType
 from utils.load_data import load_csv, load_parquet
 from utils.embedder import Embedder
 
@@ -98,7 +99,20 @@ class HNSWAlgo(IAlgo):
     def run(self, query, k):
         return self.method(query, k)
     
+    def details(self) -> Dict[str, Union[str, int]]:
+        return {
+            "embedding": "bge",
+            "mode": self.mode,
+            "neighbors": self.M,
+            "efConstruction": self.efConstruction,
+            "efSearch": self.efSearch
+        }
 
+    def name(self) -> AlgoType:
+        return AlgoType.HNSW
+
+    def data_source(self) -> str:
+        return self.data_set_name
 
 if __name__ == "__main__":
     algo = HNSWAlgo("stocks", 5)
