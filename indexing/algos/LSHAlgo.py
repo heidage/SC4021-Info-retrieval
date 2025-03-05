@@ -10,6 +10,7 @@ sys.path.append("..")
 import pandas as dd
 import numpy as np
 from algos.algo_interface import IAlgo
+from utils.evaluation.algo_types import AlgoType
 from utils.load_data import load_parquet, load_csv, load_index
 from sklearn.metrics.pairwise import cosine_similarity
 from utils.embedder import Embedder
@@ -45,7 +46,20 @@ class LSH(IAlgo):
 
     def run(self, query, k):
         return self.method(query, k)
+    
+    def details(self) -> Dict[str, Union[str, int]]:
+        return {
+            "embedding": "bge",
+            "mode": self.mode,
+            "nbits": self.nbits
+        }
 
+    def name(self) -> AlgoType:
+        return AlgoType.LSH
+
+    def data_source(self) -> str:
+        return self.data_set_name
+    
 if __name__ == "__main__":
     lsh = LSH("stocks", 2)
     print(lsh.top_k_lsh_similarity("NVDIA", 5))

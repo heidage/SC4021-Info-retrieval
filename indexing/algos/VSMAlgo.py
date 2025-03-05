@@ -7,6 +7,7 @@ sys.path.append("..")
 import pandas as pd
 import numpy as np
 from algo_interface import IAlgo
+from utils.evaluation.algo_types import AlgoType
 from utils.load_data import load_parquet, load_csv, load_index
 from sklearn.metrics.pairwise import cosine_similarity
 from utils.embedder import Embedder
@@ -39,6 +40,18 @@ class VSMAlgo(IAlgo):
     
     def run(self, query, k: int):
         return self.method(query, k)
+    
+    def details(self) -> Dict[str, Union[str, int]]:
+        return {
+            "embedding": "bge",
+            "mode": self.mode,
+        }
+
+    def name(self) -> AlgoType:
+        return AlgoType.VSM
+
+    def data_source(self) -> str:
+        return self.data_set_name
     
 if __name__ == "__main__":
     vsm = VSMAlgo("stocks")
