@@ -1,4 +1,14 @@
 ## Put frontend docker if needed
-FROM python:3.10-slim
+FROM node:18-alpine
 
 WORKDIR /app
+
+COPY package.json .
+
+RUN npm install
+
+COPY . .
+
+EXPOSE 3000
+
+CMD [ "npm", "run", "dev" ]
