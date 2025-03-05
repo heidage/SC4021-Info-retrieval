@@ -66,4 +66,4 @@ class Generator:
                 end = time.time_ns()
                 duration = end - start
                 print(f"time taken for runner: {duration // 1_000_000} ms")
-                dump_eval_result(self.folder_time, algo)
+                dump_eval_result(self.folder_time, algo.name(), algo.data_source(), res_df, **algo.details())
