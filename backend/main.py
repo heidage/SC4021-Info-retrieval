@@ -3,7 +3,7 @@ import json
 import os
 
 from dotenv import load_dotenv
-from fastapi import FastAPI, Request, Reponse, HTTPException
+from fastapi import FastAPI, Request, Response, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
@@ -29,6 +29,11 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# this endpoint is to test if server is up and working
+@app.get("/ping")
+async def ping():
+    return Response(content="pong", status_code=200)
 
 @app.post("/complete")
 async def complete_chat(request: Request, completion_request: CompletionRequest) -> dict:
