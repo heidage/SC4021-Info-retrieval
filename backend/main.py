@@ -9,6 +9,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 from input_class import CompletionRequest, Params
+from utils.api_helper import complete
 
 app = FastAPI(title="Backend for stocks opinion analysis")
 
