@@ -1,4 +1,5 @@
 import logging
+import traceback
 import json
 import os
 
@@ -7,7 +8,7 @@ from fastapi import FastAPI, Request, Response, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
-from input_class import CompletionRequest
+from input_class import CompletionRequest, Params
 
 app = FastAPI(title="Backend for stocks opinion analysis")
 
@@ -54,3 +55,14 @@ async def complete_chat(request: Request, completion_request: CompletionRequest)
     accept_header = request.headers.get("accept")
     if accept_header and "application/json" not in accept_header:
         raise HTTPException(status_code=406, detail="Accept header must be application/json")
+    
+    default_params = Params()
+    payload = default_params.dict() | completion_request.dict()
+    #Generate response from LLM
+    try:
+        result = complete()
+    except Exception as e:
+        logger.error(traceback.format_exc())
+        raise HTTPException(status_code=500, detail=str(e))
+    
+    return JSONResponse(result)
