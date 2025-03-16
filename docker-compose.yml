@@ -14,3 +14,11 @@ services:
     image: frontend
     ports:
       - "3000:3000"
+
+  solr:
+    image: solr
+    ports:
+      - "8983:8983"
+    command:
+      - solr-precreate
+      - mycollection
