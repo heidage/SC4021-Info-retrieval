@@ -8,8 +8,8 @@ from fastapi import FastAPI, Request, Response, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
-from input_class import CompletionRequest, Params
-from utils.api_helper import complete
+from input_class import EmbedRequest
+from utils.api_helper import get_top_k
 
 app = FastAPI(title="Backend for stocks opinion analysis")
 
@@ -38,18 +38,18 @@ async def ping():
     return Response(content="pong", status_code=200)
 
 @app.post("/complete")
-async def complete_chat(request: Request, completion_request: CompletionRequest) -> dict:
+async def complete_chat(request: Request, query: EmbedRequest):
     '''
     Endpoint to generate answer from prompt using LLM
 
     Args:
     - request: Incoming request object
-    - compeltion_request: CompletionRequest object, input prompt from user
+    - query: EmbedRequest object, input query from user
 
     Returns:
-    - result (dict): resultant generated answer
+    - an array of top k documents from the index
     '''
-    if not completion_request.user_prompt:
+    if not query.text:
         raise HTTPException(status_code=400, detail="User needs to ask a question!")
     
     # Check accept header and see if frontend can accept out response type
@@ -57,11 +57,9 @@ async def complete_chat(request: Request, completion_request: CompletionRequest)
     if accept_header and "application/json" not in accept_header:
         raise HTTPException(status_code=406, detail="Accept header must be application/json")
     
-    default_params = Params()
-    payload = default_params.dict() | completion_request.dict()
     #Generate response from LLM
     try:
-        result = complete()
+        result = get_top_k(query.text)
     except Exception as e:
         logger.error(traceback.format_exc())
         raise HTTPException(status_code=500, detail=str(e))
