@@ -5,7 +5,7 @@ services:
       dockerfile: ./build/Dockerfile
     image: backend
     volumes:
-      - ./models:/models
+      - ./backend/models:/models
     ports:
       - "8000:8000"
   
