@@ -141,8 +141,7 @@ for subreddit_name in subreddits:
         break
 
 # Save data to CSV
-timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-filename = f"reddit_scraper_{timestamp}.csv"
+filename = "stock_data.csv"
 # new_df = pd.concat([df, pd.DataFrame(data)], ignore_index=True)
 # new_df.to_csv(filename, index=False)
 df = pd.DataFrame(data)
