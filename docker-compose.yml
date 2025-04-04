@@ -4,13 +4,23 @@ services:
       context: ./backend
       dockerfile: ./build/Dockerfile
     image: backend
+    volumes:
+      - ./backend/models:/models
     ports:
       - "8000:8000"
   
-  frontend:
-    build:
-      context: ./frontend
-      dockerfile: ./build/Dockerfile
-    image: frontend
+  # frontend:
+  #   build:
+  #     context: ./frontend
+  #     dockerfile: ./build/Dockerfile
+  #   image: frontend
+  #   ports:
+  #     - "3000:3000"
+
+  solr:
+    image: solr
     ports:
-      - "3000:3000"
+      - "8983:8983"
+    command:
+      - solr-precreate
+      - mycollection

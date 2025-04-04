@@ -8,7 +8,7 @@ class EmbeddingClient():
     def __init__(self):
         self.embeddings = HuggingFaceEmbeddings(
             model_name=f"/models/bge-large-en-v1.5",
-            model_kwargs={"device": "auto"},
+            model_kwargs={"device": "cpu"},
             encode_kwargs={
                 "normalize_embeddings": True,
                 "precision": "binary"
