@@ -28,9 +28,9 @@ reddit = praw.Reddit(
 )
 
 # Subreddits to scrape
-# subreddits = ["StocksAndTrading", "StockMarketMovers"]
-subreddits = ["stocks", "stockstobuytoday", "StockMarket", "wallstreetbets"]
-# current_count = 9177
+# subreddits = ["stocks", "stockstobuytoday", "StockMarket", "wallstreetbets"]
+subreddits = ["wallstreetbets"]
+current_count = 9168
 target = 10000 # Total posts to collect
 posts_per_subreddit = 500
 sorting_methods = ["hot", "new", "top"]
@@ -45,8 +45,8 @@ logging.info(f"Loaded {len(stock_tickers)} stock tickers.")
 data = []
 seen_post_ids = set()
 # read in csv file to get the current count of posts
-# df = pd.read_csv("reddit_scraper_2025-04-04_05-00-32.csv")
-# seen_post_ids = set(df['post_id'])
+df = pd.read_csv("stock_data.csv")
+seen_post_ids = set(df['post_id'])
 
 def contains_stock_mention(text):
     """Check if a post/comment contains any stock ticker."""
@@ -57,8 +57,8 @@ def contains_stock_mention(text):
 
 # Loop to scrape
 for subreddit_name in subreddits:
-    # total_count = df.shape[0]
-    total_count = 0
+    total_count = df.shape[0]
+    # total_count = 0
     for sort in sorting_methods:
         logging.info(f"Scraping subreddit {subreddit_name} with {sort} sorting method.")
 
@@ -90,14 +90,21 @@ for subreddit_name in subreddits:
                             post_id = post.id  # Assign a unique post ID
 
                             # Store post separately
+                            post_time = datetime.utcfromtimestamp(post.created_utc).strftime('%Y-%m-%d %H:%M:%S')
+                            upvotes = post.score
+                            upvote_ratio = post.upvote_ratio
+                            estimated_downvotes = int(upvotes / upvote_ratio) - upvotes if upvote_ratio > 0 else None
                             data.append({
                                 "type": "post",
+                                "datetime": post_time,  # Post creation time
                                 "post_id": post_id,  # Unique identifier
                                 "subreddit": subreddit_name,
                                 "title": post.title,
                                 "author": post.author.name if post.author else "[deleted]",
                                 "url": post.url,
-                                "score": post.score,
+                                "upvotes": upvotes,
+                                "downvotes": estimated_downvotes,
+                                "upvote_ratio": upvote_ratio,
                                 "body": post.selftext
                             })
 
@@ -105,26 +112,29 @@ for subreddit_name in subreddits:
                             for comment in filtered_comments:
                                 if comment.id not in seen_post_ids:
                                     seen_post_ids.add(comment.id)  # Add comment ID to seen list
+                                    comment_time = datetime.utcfromtimestamp(comment.created_utc).strftime('%Y-%m-%d %H:%M:%S')
                                     data.append({
                                         "type": "comment",
+                                        "datetime": comment_time,  # Comment creation time
                                         "post_id": comment.id,  # Link to the post
                                         "subreddit": subreddit_name,
                                         "title": post.title,
                                         "author": comment.author.name if comment.author else "[deleted]",
-                                        "score": comment.score,
+                                        "url": post.url,
+                                        "upvotes": comment.score,
                                         "body": comment.body,
                                     })
 
                             total_count += len(filtered_comments) + 1  # +1 for the post itself
                     
-                    if total_count >= target/len(subreddits):
+                    if total_count >= target:
                         break
                     # Stop if target posts are reached
                     elif len(data) >= target:
                         break
                     logging.info(f"Scraped {len(data)} posts so far...")
 
-                if total_count >= target/len(subreddits):
+                if total_count >= target:
                     logging.info(f"Finished scraping {subreddit_name} ({sort}). Total posts: {len(data)}")
                     break  # Exit the retry loop if successful
                 else:
@@ -142,10 +152,10 @@ for subreddit_name in subreddits:
 
 # Save data to CSV
 filename = "stock_data.csv"
-# new_df = pd.concat([df, pd.DataFrame(data)], ignore_index=True)
-# new_df.to_csv(filename, index=False)
-df = pd.DataFrame(data)
-df.to_csv(filename, index=False)
+new_df = pd.concat([df, pd.DataFrame(data)], ignore_index=True)
+new_df.to_csv(filename, index=False)
+# df = pd.DataFrame(data)
+# df.to_csv(filename, index=False)
 
 logging.info(f"Scraping completed. Data saved to {filename}. Total unique posts: {len(seen_post_ids)}")
 logging.info("Reddit Scraper finished successfully.")
