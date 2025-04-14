@@ -10,35 +10,35 @@ services:
     #     ports:
     #         - '8000:8000'
 
-    frontend:  
-        build:
-            context: ./frontend
-            dockerfile: ./build/Dockerfile
-        image: frontend
+    # frontend:
+    #   build:
+    #     context: ./frontend
+    #     dockerfile: ./build/Dockerfile
+    #   image: frontend
+    #   ports:
+    #     - "3000:3000"
+
+    solr:
+        image: solr
         ports:
-            - "5173:5173"
+            - '8983:8983'
+        command:
+            - solr-precreate
+            - mycollection
 
-    # solr:
-    #     image: solr
-    #     ports:
-    #         - '8983:8983'
-    #     command:
-    #         - solr-precreate
-    #         - mycollection
-
-    # solr-indexer:
-    #     image: curlimages/curl:latest
-    #     depends_on:
-    #         - solr
-    #     volumes:
-    #         - ./indexing/dataset:/data
-    #     entrypoint: >
-    #         sh -c '
-    #             echo "⏳ Waiting for Solr...";
-    #             sleep 10;
-    #             echo "🚀 Posting sample_docs.json to Solr...";
-    #             curl -H "Content-Type: application/json" \
-    #                 --data-binary "@/data/sample_docs.json" \
-    #                 "http://solr:8983/solr/mycollection/update?commit=true";
-    #             echo "✅ Done!";
-    #         '
+    solr-indexer:
+        image: curlimages/curl:latest
+        depends_on:
+            - solr
+        volumes:
+            - ./indexing/dataset:/data
+        entrypoint: >
+            sh -c '
+                echo "⏳ Waiting for Solr...";
+                sleep 10;
+                echo "🚀 Posting sample_docs.json to Solr...";
+                curl -H "Content-Type: application/json" \
+                    --data-binary "@/data/sample_docs.json" \
+                    "http://solr:8983/solr/mycollection/update?commit=true";
+                echo "✅ Done!";
+            '
