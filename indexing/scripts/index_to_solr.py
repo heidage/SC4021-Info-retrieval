@@ -2,7 +2,7 @@ import pandas as pd
 import json
 
 # Load the Excel file
-df = pd.read_excel("cleaned_stock_data.xlsx")
+df = pd.read_csv("cleaned_stock_data.csv")
 
 # Just use the first 10 rows
 #subset = df.head(10)
@@ -12,12 +12,15 @@ docs = []
 for _, row in df.iterrows():
     doc = {
         "id": row['post_id'],  # Unique ID
+        "datetime": row['datetime'],
         "type": row['type'],
         "subreddit": row['subreddit'],
         "title": row['title'],
         "author": row['author'],
         "url": row['url'],
-        "score": int(row['score']),
+        "upvotes": int(row['score']),
+        "downvotes": int(row['downvotes']),
+        "upvote_ratio": row['upvote_ratio'],
         "body": row['body'],
         "cleaned_body": row['cleaned_body']
     }
