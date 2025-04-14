@@ -10,19 +10,13 @@ services:
     #     ports:
     #         - '8000:8000'
 
-    # frontend:
-    #   build:
-    #     context: ./frontend
-    #     dockerfile: ./build/Dockerfile
-    #   image: frontend
-    #   ports:
-    #     - "3000:3000"
-
-    solr:
-        image: solr
+    frontend:  
+        build:
+            context: ./frontend
+            dockerfile: ./build/Dockerfile
+        image: frontend
         ports:
             - "5173:5173"
-
     solr:
         image: solr
         ports:
@@ -36,10 +30,14 @@ services:
         depends_on:
             - solr
         volumes:
+        # https://solr.apache.org/guide/6_6/introduction-to-solr-indexing.html
+        # In the indexing/dataset folder there is json file => solr-indexer will index this json
+        # to the solr collection => mycollection
+        # then from the frontend we can search the data from the solr collection
             - ./indexing/dataset:/data
-        entrypoint: >
+        entrypoint: > 
             sh -c '
-                echo "⏳ Waiting for Solr...";
+                echo "⏳ Waiting for Solr..."; 
                 sleep 10;
                 echo "🚀 Posting sample_docs.json to Solr...";
                 curl -H "Content-Type: application/json" \
