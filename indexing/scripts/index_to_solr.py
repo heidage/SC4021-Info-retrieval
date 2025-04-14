@@ -2,7 +2,7 @@ import pandas as pd
 import json
 
 # Load the Excel file
-df = pd.read_excel("cleaned_stock_data.xlsx")
+df = pd.read_csv("cleaned_stock_data.csv")
 
 # Just use the first 10 rows
 #subset = df.head(10)
