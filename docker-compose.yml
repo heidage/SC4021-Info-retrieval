@@ -11,12 +11,12 @@ services:
     #         - '8000:8000'
 
     frontend:  
-      build:
-        context: ./frontend
-        dockerfile: ./build/Dockerfile
-      image: frontend
-      ports:
-        - "5173:5173"
+        build:
+            context: ./frontend
+            dockerfile: ./build/Dockerfile
+        image: frontend
+        ports:
+            - "5173:5173"
 
     # solr:
     #     image: solr
