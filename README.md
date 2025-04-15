@@ -37,9 +37,9 @@ You should see `✅ Indexing complete.` in your logs.
 
 After running `docker-compose up --build`, you should see log messages like:
 
-`✅ Solr is ready. Indexing now...
+`🚀 Posting sample_docs.json to Solr...
 ...
-✅ Indexing complete.`
+✅ Done.`
 
 To manually verify the indexed data:
 
