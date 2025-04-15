@@ -3,7 +3,7 @@ import numpy as np
 import json
 
 # Load the Excel file
-df = pd.read_csv("../cleaned_stock_data.csv")
+df = pd.read_csv("../dataset/cleaned_stock_data.csv")
 
 # Just use the first 10 rows
 #subset = df.head(10)
@@ -33,7 +33,7 @@ for _, row in df.iterrows():
     docs.append(doc)
 
 # Save to JSON
-with open("dataset/sample_docs.json", "w") as f:
+with open("../dataset/sample_docs.json", "w") as f:
     json.dump(docs, f, indent=2)
 
 print(f"✅ sample_docs.json created with {len(docs)} documents.")
