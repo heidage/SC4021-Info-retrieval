@@ -2,6 +2,16 @@
 <config>
     <luceneMatchVersion>9.8</luceneMatchVersion>
 
+    <!-- 🌐 CORS CONFIGURATION -->
+    <initParams path="/*">
+        <lst name="defaults">
+            <str name="cors.enabled">true</str>
+            <str name="cors.allow-origin">*</str> <!-- Or your frontend URL -->
+            <str name="cors.allow-methods">GET,POST,OPTIONS</str>
+            <str name="cors.allow-headers">X-Requested-With,Content-Type,Authorization</str>
+        </lst>
+    </initParams>
+    
     <schemaFactory class="ManagedIndexSchemaFactory">
         <bool name="mutable">true</bool>
         <str name="managedSchemaResourceName">managed-schema</str>
@@ -35,20 +45,11 @@
     </requestHandler>
 
     <!-- Dynamic schema field handling -->
-    <updateRequestProcessorChain name="add-unknown-fields-to-the-schema">
-        <processor class="solr.AddSchemaFieldsUpdateProcessorFactory">
-        <lst name="typeMapping">
-            <str name="valueClass">java.lang.String</str>
-            <str name="fieldType">string</str>
-        </lst>
-        </processor>
-        <processor class="solr.RunUpdateProcessorFactory"/>
-    </updateRequestProcessorChain>
 
     <!-- Indexing and merging -->
     <directoryFactory name="DirectoryFactory" class="solr.StandardDirectoryFactory"/>
     <updateHandler class="solr.DirectUpdateHandler2"/>
     <indexConfig>
-        <mergePolicyFactory class="solr.TieredMergePolicyFactory"/>
+        <mergePolicyFactory class="org.apache.solr.index.TieredMergePolicyFactory"/>
     </indexConfig>
 </config>

@@ -22,10 +22,11 @@ services:
         ports:
             - '8983:8983'
         volumes:
-            - ./indexing/build/solr_config:/var/solr/data/mycollection/conf
+            - ./indexing/build/solr_config:/opt/solr/server/solr/configsets/myconfig
         command:
             - solr-precreate
             - mycollection
+            - /opt/solr/server/solr/configsets/myconfig
 
     solr-indexer:
         image: curlimages/curl:latest
