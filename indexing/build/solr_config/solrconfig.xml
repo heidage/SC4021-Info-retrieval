@@ -1,0 +1,54 @@
+<?xml version"1.0" encoding"UTF-8" ?>
+<config>
+    <luceneMatchVersion>9.8</luceneMatchVersion>
+
+    <schemaFactory class="ManagedIndexSchemaFactory">
+        <bool name="mutable">true</bool>
+        <str name="managedSchemaResourceName">managed-schema</str>
+    </schemaFactory>
+
+    <!--Request handler-->
+    <requestHandler name="/select" class="solr.SearchHandler">
+        <lst name="defaults">
+            <str name="echoParams">explicit</str>
+            <int name="rows">10</int>
+            <str name="df">cleaned_body</str> <!--default field to search-->
+        </lst>
+    </requestHandler>
+
+    <requestHandler name="/update" class="solr.UpdateRequestHandler"/>
+
+    <requestHandler name="/update/json" class="solr.UpdateRequestHandler">
+        <lst name="defaults">
+        <str name="stream.contentType">application/json</str>
+        </lst>
+    </requestHandler>
+
+    <!-- Faceting support -->
+    <requestHandler name="/browse" class="solr.SearchHandler">
+        <lst name="defaults">
+        <str name="q">*:*</str>
+        <str name="facet">true</str>
+        <str name="facet.field">keywords</str>
+        <str name="rows">20</str>
+        </lst>
+    </requestHandler>
+
+    <!-- Dynamic schema field handling -->
+    <updateRequestProcessorChain name="add-unknown-fields-to-the-schema">
+        <processor class="solr.AddSchemaFieldsUpdateProcessorFactory">
+        <lst name="typeMapping">
+            <str name="valueClass">java.lang.String</str>
+            <str name="fieldType">string</str>
+        </lst>
+        </processor>
+        <processor class="solr.RunUpdateProcessorFactory"/>
+    </updateRequestProcessorChain>
+
+    <!-- Indexing and merging -->
+    <directoryFactory name="DirectoryFactory" class="solr.StandardDirectoryFactory"/>
+    <updateHandler class="solr.DirectUpdateHandler2"/>
+    <indexConfig>
+        <mergePolicyFactory class="solr.TieredMergePolicyFactory"/>
+    </indexConfig>
+</config>

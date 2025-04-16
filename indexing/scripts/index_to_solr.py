@@ -15,7 +15,10 @@ for _, row in df.iterrows():
         row['downvotes'] = 0
     if pd.isna(row['upvotes']):
         row['upvotes'] = 0
-        
+    if pd.isna(row['upvote_ratio']):
+        row['upvote_ratio'] = 0.0
+    if pd.isna(row['cleaned_body']):
+        row['cleaned_body'] = "No information"
     doc = {
         "id": row['post_id'],  # Unique ID
         "datetime": row['datetime'],

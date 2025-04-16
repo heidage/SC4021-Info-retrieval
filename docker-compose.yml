@@ -22,6 +22,8 @@ services:
         image: solr
         ports:
             - '8983:8983'
+        volumes:
+            - ./indexing/build/solr_config:/var/solr/data/mycollection/conf
         command:
             - solr-precreate
             - mycollection
