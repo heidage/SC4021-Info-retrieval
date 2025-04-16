@@ -1,6 +1,6 @@
 # SC4021-Info-retrieval
 
-Building an opinion search engine on stock sentiments (Is it good to buy stocks?)
+Building an opinion search engine on trading platforms (Which trading platform is the best?)
 
 ## Getting started
 
@@ -12,12 +12,12 @@ Building an opinion search engine on stock sentiments (Is it good to buy stocks?
 ### Running the Application (with Automated Indexing)
 **1\. Create JSON dataset in respective folder**
 
-1\. Go into the indexing folder via the command `cd indexing`.
-2\. Create a virtual environment using `python -m venv venv` and activate it
-3\. Install the requirements using `pip install -r build/requirements.txt`
-4\. Cd into the scripts folder and run the command `python index_to_solr.py`
-5\. You should see `✅ sample_docs.json created with XXX documents.` in your logs.
-6\. To check if the dataset is present, go to the dataset folder and there should be a file called `sample_docs.json`.
+1. Go into the indexing folder via the command `cd indexing`.
+2. Create a virtual environment using `python -m venv venv` and activate it
+3. Install the requirements using `pip install -r build/requirements.txt`
+4. Cd into the scripts folder and run the command `python index_to_solr.py`
+5. You should see `✅ sample_docs.json created with XXX documents.` in your logs.
+6. To check if the dataset is present, go to the dataset folder and there should be a file called `sample_docs.json`.
 
 **2\. Start all services using Docker Compose**
 
