@@ -19,9 +19,14 @@ for _, row in df.iterrows():
         row['upvote_ratio'] = 0.0
     if pd.isna(row['cleaned_body']):
         row['cleaned_body'] = "No information"
+    
+    originalDateTime = pd.to_datetime(row['datetime'])
+    #Convert to ISO 8601 format
+    ISO_datetime = originalDateTime.strftime('%Y-%m-%dT%H:%M:%S.%SZ')
+
     doc = {
         "id": row['post_id'],  # Unique ID
-        "datetime": row['datetime'],
+        "datetime": ISO_datetime,
         "type": row['type'],
         "subreddit": row['subreddit'],
         "title": row['title'],
