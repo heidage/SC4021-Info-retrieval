@@ -40,4 +40,4 @@ services:
                     --data-binary "@/data/sample_docs.json" \
                     "http://solr:8983/solr/mycollection/update?commit=true";
                 echo "✅ Done!";
-            '
+
