@@ -30,30 +30,10 @@ services:
         depends_on:
             - solr
         volumes:
-        # https://solr.apache.org/guide/6_6/introduction-to-solr-indexing.html
-        # In the indexing/dataset folder there is json file => solr-indexer will index this json
-        # to the solr collection => mycollection
-        # then from the frontend we can search the data from the solr collection
             - ./indexing/dataset:/data
         entrypoint: > 
             sh -c '
                 echo "⏳ Waiting for Solr..."; 
-                sleep 10;
-                echo "🚀 Posting sample_docs.json to Solr...";
-                curl -H "Content-Type: application/json" \
-                    --data-binary "@/data/sample_docs.json" \
-                    "http://solr:8983/solr/mycollection/update?commit=true";
-                echo "✅ Done!";
-            '
-    solr-indexer:
-        image: curlimages/curl:latest
-        depends_on:
-            - solr
-        volumes:
-            - ./indexing/dataset:/data
-        entrypoint: >
-            sh -c '
-                echo "⏳ Waiting for Solr...";
                 sleep 10;
                 echo "🚀 Posting sample_docs.json to Solr...";
                 curl -H "Content-Type: application/json" \
