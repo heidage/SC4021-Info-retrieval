@@ -8,4 +8,26 @@ scraping:
     - 'tigerbrokers_official'
     - 'webull'
     - 'TigerBrokers'
-  posts_per_subreddit: 50
+    - 'singaporefi'
+    - 'ibkr'
+    - 'moomoo_official'
+    - 'Etoro'
+    - 'RobinHood'
+    - 'plus500'
+    - 'Fidelity'
+    - 'thinkorswim'
+    - 'InteractiveBrokers'
+    - 'TradeStation'
+    - 'CharlesSchwab'
+    - 'vanguard'
+    - 'merrilledge'
+    - 'etrade'
+    - 'tdameritrade'
+    - 'Trading212'
+    - 'RevolutTrading'
+    - 'FreetradeApp'
+    - 'Wealthsimple'
+    
+
+    
+  posts_per_subreddit: 4000
