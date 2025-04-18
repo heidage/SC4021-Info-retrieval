@@ -11,6 +11,9 @@ df = pd.read_csv("../../scraper-new/results_no_emoji.csv")
 # Prepare the Solr-friendly JSON format
 docs = []
 for _, row in df.iterrows():
+    if pd.isna(row['post_content']):
+        row['post_content'] = "[No content written by the author]"
+    
     originalDateTime = pd.to_datetime(row['created_iso'])
     #Convert to ISO 8601 format
     ISO_datetime = originalDateTime.strftime('%Y-%m-%dT%H:%M:%S.%SZ')
