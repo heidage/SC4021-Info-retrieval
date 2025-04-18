@@ -1,4 +1,3 @@
-version: '3'
 services:
     # backend:
     #     build:
@@ -21,9 +20,12 @@ services:
         image: solr
         ports:
             - '8983:8983'
+        volumes:
+            - ./indexing/build/solr_config:/opt/solr/server/solr/configsets/myconfig
         command:
             - solr-precreate
             - mycollection
+            - /opt/solr/server/solr/configsets/myconfig
 
     solr-indexer:
         image: curlimages/curl:latest
@@ -31,13 +33,15 @@ services:
             - solr
         volumes:
             - ./indexing/dataset:/data
-        entrypoint: > 
-            sh -c '
-                echo "⏳ Waiting for Solr..."; 
-                sleep 10;
-                echo "🚀 Posting sample_docs.json to Solr...";
-                curl -H "Content-Type: application/json" \
-                    --data-binary "@/data/sample_docs.json" \
-                    "http://solr:8983/solr/mycollection/update?commit=true";
-                echo "✅ Done!";
+        entrypoint:
+            - sh
+            - -c
+            - |
+              echo "⏳ Waiting for Solr..."; 
+              sleep 10;
+              echo "🚀 Posting reddit_index.json to Solr...";
+              curl -H "Content-Type: application/json" \
+                  --data-binary "@/data/reddit_index.json" \
+                  "http://solr:8983/solr/mycollection/update?commit=true";
+              echo "✅ Done!";
 
