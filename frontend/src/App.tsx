@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
+import axios from 'axios';
 import { motion } from 'framer-motion';
 import { Search, TrendingUp, TrendingDown, LineChart, MessageSquare, Hash, Database, Tag, AlertCircle } from 'lucide-react';
+import { ApiClient, QueryResponse} from './services/api';
 
 interface Comment {
   text: string;
@@ -12,6 +14,7 @@ interface Keyword {
   count: number;
 }
 
+
 function App() {
   const [query, setQuery] = useState('');
   const [queryError, setQueryError] = useState('');
@@ -21,9 +24,12 @@ function App() {
   const [subreddits, setSubreddits] = useState<string[]>([]);
   const [recordCount, setRecordCount] = useState<number>(0);
   const [keywords, setKeywords] = useState<Keyword[]>([]);
+  const [apiError, setApiError] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    console.log('Query submitted:', query);
 
     //Query validation here
     if(!query.trim()) {
@@ -31,28 +37,25 @@ function App() {
       return;
     }
     setQueryError('');
-
+    setApiError(null);
     setIsLoading(true);
-    
-    // THIS PORTION ADDS IN DUMMY DATA. 
-    setTimeout(() => {
-      setSentiment(Math.random() > 0.5 ? 'bullish' : 'bearish');
-      setComments([
-        { text: "IBKR's interface is much better for trading options", platform: "IBKR" },
-        { text: "Tiger's mobile app has improved significantly", platform: "TigerBrokers" },
-        { text: "The execution speed on IBKR is unmatched", platform: "IBKR" },
-      ]);
-      setSubreddits(['r/investing', 'r/stocks', 'r/options']);
-      setRecordCount(1234);
-      setKeywords([
-        { text: "interface", count: 45 },
-        { text: "trading", count: 38 },
-        { text: "mobile", count: 32 },
-        { text: "execution", count: 28 },
-        { text: "speed", count: 25 },
-      ]);
+
+    try{
+      const response = await ApiClient.getQueryResponse(query);
+
+      console.log('getQueryResponse response:', response);
+
+      setSentiment(response.sentiment);
+      setComments(response.comments);
+      setSubreddits(response.subreddits);
+      setRecordCount(response.recordCount);
+      setKeywords(response.keywords);
+    } catch(error){
+      console.error('Error fetching query response:', error);
+      setApiError('Failed to fetch data. Please try again later.');
+    } finally {
       setIsLoading(false);
-    }, 1500);
+    }
   };
 
   return (
@@ -90,7 +93,7 @@ function App() {
                 className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-blue-500 text-white px-4 py-1 rounded-md hover:bg-blue-600 transition-colors"
                 disabled={isLoading}
               >
-                Analyze
+                Submit
               </motion.button>
             </div>
             {queryError && (
