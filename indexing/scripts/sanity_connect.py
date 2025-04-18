@@ -26,7 +26,7 @@ params = {
     "sort": "score desc"
 }
 
-query = 'body:NVDA AND type:post'
+query = 'comment_content:moomoo AND subreddit:webull'
 
 start = time.time()
 results = solr.search(query, **params)
@@ -39,11 +39,11 @@ for doc in results:
 
 # ------------------------- Test Multiple Queries -------------------------
 query_list = [
-    'type:post',
-    'type:comment',
-    'body:"labor jobs"',
-    'subreddit:stocks',
-    'upvotes:[30 TO *]'
+    'comment_content:"bad"',
+    'comment_content:"moomoo" AND subbreddit:webull',
+    'score:[30 TO *]'
+    'subreddit:moomoo_official',
+    'comment_content:"horrible" OR comment_content:"IBKR"',
 ]
 
 for q in query_list:
