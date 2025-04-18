@@ -36,32 +36,3 @@ app.add_middleware(
 @app.get("/ping")
 async def ping():
     return Response(content="pong", status_code=200)
-
-@app.post("/complete")
-async def complete_chat(request: Request, query: EmbedRequest):
-    '''
-    Endpoint to generate answer from prompt using LLM
-
-    Args:
-    - request: Incoming request object
-    - query: EmbedRequest object, input query from user
-
-    Returns:
-    - an array of top k documents from the index
-    '''
-    if not query.text:
-        raise HTTPException(status_code=400, detail="User needs to ask a question!")
-    
-    # Check accept header and see if frontend can accept out response type
-    accept_header = request.headers.get("accept")
-    if accept_header and "application/json" not in accept_header:
-        raise HTTPException(status_code=406, detail="Accept header must be application/json")
-    
-    #Generate response from LLM
-    try:
-        result = get_top_k(query.text)
-    except Exception as e:
-        logger.error(traceback.format_exc())
-        raise HTTPException(status_code=500, detail=str(e))
-    
-    return JSONResponse(result)
