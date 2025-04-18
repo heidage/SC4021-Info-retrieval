@@ -44,8 +44,6 @@
         </lst>
     </requestHandler>
 
-    <!-- Dynamic schema field handling -->
-
     <!-- Indexing and merging -->
     <directoryFactory name="DirectoryFactory" class="solr.StandardDirectoryFactory"/>
     <updateHandler class="solr.DirectUpdateHandler2"/>
