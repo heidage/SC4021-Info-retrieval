@@ -67,7 +67,7 @@ def main():
     raise ValueError('Model file does not exist. Please perform the training step first')
   
   tokenizer = build_tokenizer(config["tokenizer_config"])
-  train_loader, val_loader, test_loader = get_dataloaders(
+  train_loader, val_loader = get_dataloaders(
     tokenizer=tokenizer, 
     dataset_args=config["data_config"], 
     training_args=training_args
@@ -76,7 +76,7 @@ def main():
 
   metric_names = config['metric_config']['metrics']
   metric_dict = get_metrics_dict(metric_names)
-  for input, length, label in test_loader:
+  for input, length, label in val_loader:
     input = input.to("cuda")
     with torch.no_grad():
       output = model(input)

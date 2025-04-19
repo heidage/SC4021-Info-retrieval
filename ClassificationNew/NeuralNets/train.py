@@ -56,7 +56,7 @@ def main():
     config['model_config']['args']['attention'] = True
   save_model = config['trainer_args'].get('save_model', False)
   tokenizer = build_tokenizer(config["tokenizer_config"])
-  train_loader, val_loader, test_loader = get_dataloaders(
+  train_loader, val_loader = get_dataloaders(
     tokenizer=tokenizer, 
     dataset_args=config["data_config"], 
     training_args=training_args
@@ -84,7 +84,7 @@ def main():
     training_args=training_args, 
     train_loader=train_loader,
     val_loader=val_loader,
-    test_loader=test_loader,
+    test_loader=None,
     optimizer=optimizer,
     metric_names=config["metric_config"]["metrics"],
     analysis_config=config["analysis_config"],
