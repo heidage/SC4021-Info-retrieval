@@ -6,7 +6,8 @@ from sentence_transformers import SentenceTransformer, util
 from typing import List, Any, Tuple
 from response_model import SolrResponse, Comment, Keyword
 
-BASE_URL = "http://localhost:8983/solr/mycollection/"
+# BASE_URL = "http://localhost:8983/solr/mycollection/"
+BASE_URL = "http://solr:8983/solr/reddit/" # Solr base URL
 model = SentenceTransformer('all-MiniLM-L6-v2')
 nlp_en = spacy.load("en_core_web_sm") #spacy model for NLP tasks
 
@@ -99,7 +100,7 @@ def get_results(query: str, additional_params: dict = None) -> Tuple[SolrRespons
     if additional_params:
         params.update(additional_params)
 
-    query = "comment_content:" + query + " OR post_content:" + query
+    query = "comment_content:" + query + " AND (good OR great OR amazing OR bad OR terrible OR worst)"
     try:
         results = solr.search(query, **params)
         raw_response = results.raw_response

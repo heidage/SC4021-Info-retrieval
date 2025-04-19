@@ -6,6 +6,7 @@ class QueryRequest(BaseModel):
     Model for a query.
     """
     query: str = Field(description="Query")
+    additional_params: 
 class Docs(BaseModel):
     """
     Model for a document.
