@@ -5,7 +5,7 @@
             "dim_input": 300,
             "dim_hidden": 256,
             "num_layers": 2,
-            "dim_output": 3,
+            "dim_output": 2,
             "embedding_strategy": "word2vec",
             "pretrained_path": "word2vec-google-news-300",
             "embedding_frozen": false,
@@ -16,7 +16,7 @@
     "tokenizer_config": {
         "tokenizer_type": "nltk",
         "args": {
-            "dataset": "johntoro/Reddit-Stock-Sentiment"
+            "dataset": "johntoro/Reddit-Stock-V2"
         }
     },
     "trainer_args": {
@@ -41,7 +41,7 @@
         "type": "classification"
     },
     "analysis_config": {
-        "output_dir": "experiments/n_layers/bigru_layer=2",
+        "output_dir": "experiments/n_layers/bigru_layer=2_V2",
         "record_metrics": true,
         "record_gradients": true,
         "save_interval": 1000

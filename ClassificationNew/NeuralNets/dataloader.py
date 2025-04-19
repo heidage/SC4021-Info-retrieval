@@ -54,6 +54,7 @@ class ClassificationDataset(torch.utils.data.Dataset):
     item = self.dataset[idx]
     text = item["text"]
     if self.dataset_type == "neutral_sentiment":
+      print("Neutral sentiment")
       label = int(item["label"] + 1) # -1, 0, 1 -> 0, 1, 2 Neutral, Positive, Negative
     else:
       label = item["label"] # normal
@@ -120,7 +121,7 @@ def get_dataloaders(
   
   if training_args.task == "classification":
     print("Tokenizer unk id:",tokenizer.unk_id)
-    if dataset_args["name"] == "johntoro/Reddit-Stock-Sentiment":
+    if dataset_args["name"] == "johntoro/Reddit-Stock-Sentiment": # old version
       train_dataset = ClassificationDataset(dataset["train"], tokenizer, type="neutral_sentiment")
       validation_dataset = ClassificationDataset(dataset["validation"], tokenizer, type="neutral_sentiment")
     else:
