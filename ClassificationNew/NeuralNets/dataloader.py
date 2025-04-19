@@ -15,6 +15,32 @@ from trainer import TrainingArgs
 
 SUPPORTED_TASKS = ["classification"]
 
+class ClassificationDatasetFromList(torch.utils.data.Dataset):
+  def __init__(self, input_list, tokenizer, type=None):
+    self.dataset_type = type
+    self.input_list = input_list
+    self.tokenizer = tokenizer
+  
+  def __len__(self):
+    return len(self.input_list)
+  
+  def __getitem__(self, idx):
+    text = self.input_list[idx]
+    ids = self.tokenizer.tokenize(text)["ids"]
+    length = len(ids)
+    ids = torch.tensor(ids)
+    return ids, length
+
+  def count(self, idx):
+    item = self.dataset[idx]
+    text = item["text"]
+    res = self.tokenizer.tokenize(text)
+    ids = res["ids"]
+    tokens = res["tokens"]
+    length = len(ids)
+    n_unks = sum([1 for i in ids if i == self.tokenizer.unk_id])
+    return n_unks, length
+
 class ClassificationDataset(torch.utils.data.Dataset):
   def __init__(self, dataset, tokenizer, type=None):
     self.dataset_type = type
@@ -45,6 +71,34 @@ class ClassificationDataset(torch.utils.data.Dataset):
     length = len(ids)
     n_unks = sum([1 for i in ids if i == self.tokenizer.unk_id])
     return n_unks, length
+  
+
+def get_dataloaders_from_list(
+  input_list: list[str],
+  bs: int,
+  tokenizer: BaseTokenizer,
+  dataset_args: Dict,
+  training_args: TrainingArgs
+):
+  assert training_args.task in SUPPORTED_TASKS, f"Task {training_args.task} not supported"
+  assert hasattr(training_args, "training_batch_size"), "Batch size not found in training args"
+  assert "is_huggingface" in dataset_args, "is_huggingface not found in dataset args"
+  assert "name" in dataset_args, "Dataset name not found in dataset args"
+  
+  if training_args.task == "classification":
+    print("Tokenizer unk id:",tokenizer.unk_id)
+    infer_dataset = ClassificationDatasetFromList(input_list, tokenizer)
+    
+    def padding_fn(batch):
+      (xx, lengths) = zip(*batch)
+      xx_pad = pad_sequence(xx, batch_first=True, padding_value=tokenizer.pad_id)
+      return xx_pad, torch.tensor(lengths)
+    
+    infer_loader = DataLoader(infer_dataset, batch_size=bs, shuffle=True, collate_fn=padding_fn)
+  else:
+    raise NotImplementedError(f"Task {training_args.task} not implemented")
+  
+  return infer_loader
 
 def get_dataloaders(
   tokenizer: BaseTokenizer,
