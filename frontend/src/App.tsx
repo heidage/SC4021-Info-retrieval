@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import axios from 'axios';
 import { motion } from 'framer-motion';
 import { Search, TrendingUp, TrendingDown, LineChart, MessageSquare, Hash, Database, Tag, AlertCircle } from 'lucide-react';
 import { ApiClient, QueryResponse} from './services/api';
@@ -10,7 +9,7 @@ interface Comment {
 }
 
 interface Keyword {
-  text: string;
+  keyword: string;
   count: number;
 }
 
@@ -199,7 +198,7 @@ function App() {
                         transition={{ delay: index * 0.1 }}
                         className="bg-gray-800/50 px-3 py-1 rounded-full"
                       >
-                        <span className="text-gray-300">{keyword.text}</span>
+                        <span className="text-gray-300">{keyword.keyword}</span>
                         <span className="ml-2 text-yellow-400">{keyword.count}</span>
                       </motion.div>
                     ))}
