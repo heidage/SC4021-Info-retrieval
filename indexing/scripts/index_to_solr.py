@@ -19,6 +19,7 @@ for _, row in df.iterrows():
     ISO_datetime = originalDateTime.strftime('%Y-%m-%dT%H:%M:%S.%SZ')
 
     doc = {
+        "id": row['comment_id'],  # Unique ID for the comment
         "post_id": row['post_id'],  # Unique ID
         "subreddit": row['subreddit'],
         "title": row['title'],

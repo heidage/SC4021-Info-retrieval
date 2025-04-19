@@ -1,21 +1,4 @@
 services:
-    # backend:
-    #     build:
-    #         context: ./backend
-    #         dockerfile: ./build/Dockerfile
-    #     image: backend
-    #     volumes:
-    #         - ./backend/models:/models
-    #     ports:
-    #         - '8000:8000'
-
-    frontend:  
-        build:
-            context: ./frontend
-            dockerfile: ./build/Dockerfile
-        image: frontend
-        ports:
-            - "5173:5173"
     solr:
         image: solr
         ports:
@@ -44,4 +27,24 @@ services:
                   --data-binary "@/data/reddit_index.json" \
                   "http://solr:8983/solr/mycollection/update?commit=true";
               echo "✅ Done!";
+    
+    # backend:
+    #     build:
+    #         context: ./backend
+    #         dockerfile: ./build/Dockerfile
+    #     image: backend
+    #     depends_on:
+    #         - solr-indexer
+    #     volumes:
+    #         - ./backend/models:/models
+    #     ports:
+    #         - '8000:8000'
+
+    # frontend:  
+    #     build:
+    #         context: ./frontend
+    #         dockerfile: ./build/Dockerfile
+    #     image: frontend
+    #     ports:
+    #         - "5173:5173"
 
