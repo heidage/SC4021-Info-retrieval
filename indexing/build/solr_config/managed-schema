@@ -31,9 +31,9 @@
     <field name="subreddit" type="string" indexed="true" stored="true"/>
     <field name="title" type="preprocess_text" indexed="true" stored="true" required="true" />
     <field name="url" type="string" indexed="true" stored="true" />
-    <field name="post_content" type="preprocess_text" indexed="true" stored="true" termVectors="true" termPositions="true" termOffsets="true"/>
+    <field name="post_content" type="preprocess_text" indexed="true" stored="true" />
     <field name="comment_id" type="string" indexed="true" stored="true" required="true" />
-    <field name="comment_content" type="preprocess_text" indexed="true" stored="true" termVectors="true" termPositions="true" termOffsets="true"/>
+    <field name="comment_content" type="preprocess_text" indexed="true" stored="true" />
     <field name="comment_author" type="string" indexed="true" stored="true" />
     <field name="score" type="pint" indexed="true" stored="true" />
     <field name="datetime" type="pdate" indexed="true" stored="true" />
