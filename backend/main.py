@@ -1,8 +1,8 @@
 import logging
 
-from fastapi import FastAPI, Response, HTTPException
+from fastapi import FastAPI, Response, HTTPException, Body
 from fastapi.middleware.cors import CORSMiddleware
-from response_model import QueryResponse
+from response_model import QueryResponse, QueryRequest
 
 from utils.api_helper import get_results, convert_to_query_response
 
@@ -10,6 +10,8 @@ app = FastAPI(title="Backend for stocks opinion analysis")
 
 # add logging
 logger = logging.getLogger(__name__)
+logging.basicConfig(level=logging.DEBUG)
+
 ### handler ###
 handler = logging.StreamHandler()
 logger.addHandler(handler)
@@ -32,12 +34,14 @@ app.add_middleware(
 async def ping():
     return Response(content="pong", status_code=200)
 
-@app.post("/api/query")
-async def query(query: str) -> QueryResponse:
+@app.post("/api/query", response_model=QueryResponse)
+async def query(query_request: QueryRequest = Body(...)) -> QueryResponse:
+    query = query_request.query
+
     if not query:
         raise HTTPException(status_code=400, detail="Query cannot be empty")
-    logger.info(f"Query: {query}")
 
+    logger.info(f"Query: {query}")
     try:
         # send query to solr and get relevant matches
         results, keywords = get_results(query)

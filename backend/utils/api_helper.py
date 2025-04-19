@@ -21,7 +21,7 @@ def connect_to_solr():
 
     return pysolr.Solr(BASE_URL, always_commit=True, timeout=10), default_params
 
-def get_keywords_from_spacy_and_tfidf(documents: List[str], top_k: int = 5) -> List[Keyword]:
+def get_keywords_from_spacy_and_tfidf(documents: List[str]) -> List[Keyword]:
     """
     Uses spacy for smarter tokenization and extract keywords from documentsu using tfidf as well
     :param documents: list of documents to extract keywords from
@@ -32,22 +32,29 @@ def get_keywords_from_spacy_and_tfidf(documents: List[str], top_k: int = 5) -> L
 
     for doc in documents:
         spacy_doc = nlp_en(doc.lower())
-        tokens = [token.lemma_ for token in spacy_doc if not token.is_stop and not token.is_punct and token.is_alpha]
+        tokens = [
+            token.lemma_ for token in spacy_doc 
+            if not token.is_stop and not token.is_punct and token.is_alpha and len(token.lemma_) > 2
+        ]
         processed_docs.append(" ".join(tokens))
 
     # Use TF-IDF to extract keywords
     tfidf = TfidfVectorizer()
     tfidf_matrix = tfidf.fit_transform(processed_docs)
     feature_names = tfidf.get_feature_names_out()
-    summed_tfidf = tfidf_matrix.sum(axis=0).A1
+    tfidf_scores = tfidf_matrix.sum(axis=0).A1
 
-    scores = list(zip(feature_names, summed_tfidf))
-    sorted_scores = sorted(scores, key=lambda x: x[1], reverse=True)[:top_k]
+    feature_scores = list(zip(feature_names, tfidf_scores))
+    top_feature_names = sorted(feature_scores, key=lambda x: x[1], reverse=True)[:20]
+
+    # find the occurence of top features names from the vocab
+    vocab = tfidf.vocabulary_
+    sorted_scores = [(feature, vocab[feature]) for feature, score in top_feature_names]
 
     keywords = [Keyword(keyword=keyword, count=score) for keyword, score in sorted_scores]
     return keywords
 
-def extract_keywords_semantic(query: str, documents: List[str], top_k: int = 5) -> List[Keyword]:
+def extract_keywords_semantic(query: str, documents: List[str]) -> List[Keyword]:
     """
     Uses sentence transformers to extract keywords from documents using semantic similarity
     :param query: query to extract keywords from
@@ -60,7 +67,7 @@ def extract_keywords_semantic(query: str, documents: List[str], top_k: int = 5) 
     spacy_doc = nlp_en(full_text.lower())
     candidates = list(set([
         token.lemma_ for token in spacy_doc
-        if not token.is_stop and not token.is_punct and token.is_alpha
+        if not token.is_stop and not token.is_punct and token.is_alpha and len(token.lemma_) > 2
     ]))
 
     # generate embeddings
@@ -69,7 +76,7 @@ def extract_keywords_semantic(query: str, documents: List[str], top_k: int = 5) 
     similarities = util.pytorch_cos_sim(query_embedding, candidate_embeddings)[0]
     
     keyword_scores = list(zip(candidates, similarities.cpu().numpy()))
-    sorted_keywords = sorted(keyword_scores, key=lambda x: x[1], reverse=True)[:top_k]
+    sorted_keywords = sorted(keyword_scores, key=lambda x: x[1], reverse=True)[:20]
 
     keyword_counts = Counter([
         token.lemma_ for token in spacy_doc
@@ -99,19 +106,33 @@ def get_results(query: str, additional_params: dict = None) -> Tuple[SolrRespons
         solr_response = raw_response["response"]
 
         documents = [doc.get("comment_content", "") for doc in solr_response["docs"]]
-        
+
         # Step 1: Get TF-IDF-based keyword extraction
         tfidf_keywords = get_keywords_from_spacy_and_tfidf(documents)
         # Step 2: Get semantic keyword extraction
         semantic_keywords = extract_keywords_semantic(query, documents)
-        # Step 3: Combine TF-IDF and semantic keyword extraction
-        combined = Counter()
-        for keyword_dict in tfidf_keywords + semantic_keywords:
-            for word, count in keyword_dict.items():
-                combined[word] += count
+        
+        # Create dictionaries for fast look-up
+        tfidf_dict = {kw.keyword: kw.count for kw in tfidf_keywords}
+        semantic_dict = {kw.keyword: kw.count for kw in semantic_keywords}
 
-        # Step 4: Get top K keywords
-        keywords = [Keyword(keyword=keyword, count=count) for keyword, count in combined.most_common(5)]
+        combined_scores = {}
+        all_keywords = set(tfidf_dict.keys()).union(semantic_dict.keys())
+
+        for keyword in all_keywords:
+            tfidf_score = tfidf_dict.get(keyword, 0)
+            semantic_score = semantic_dict.get(keyword, 0)
+            # Boost keywords that appear in both extractions (e.g., multiply semantic score by 2)
+            if keyword in tfidf_dict and keyword in semantic_dict:
+                combined_score = tfidf_score + (semantic_score * 2)
+            else:
+                combined_score = tfidf_score + semantic_score
+            combined_scores[keyword] = combined_score
+
+        # Convert back to Keyword objects
+        combined_keywords = [Keyword(keyword=kw, count=score) for kw, score in combined_scores.items()]
+        sorted_combined_keywords = sorted(combined_keywords, key=lambda x: x.count, reverse=True)
+        keywords = sorted_combined_keywords[:10]
 
         return SolrResponse(**solr_response), keywords
     
@@ -123,15 +144,15 @@ def convert_to_query_response(solr_response: SolrResponse) -> Tuple[int, List[st
     """
     Convert solr response to query response
     """
-    recordCount = solr_response["numFound"]
+    recordCount = solr_response.numFound
     #get unique subreddits from solr response
     subreddits = set()
     comments = []
 
-    for doc in solr_response["docs"]:
-        subreddits.add(doc["subreddit"])
+    for doc in solr_response.docs:
+        subreddits.add(doc.subreddit)
         comments.append({
-            "text": doc["comment_content"],
+            "text": doc.comment_content,
             "sentiment": "postitive" #TODO: add sentiment analysis
         })
 

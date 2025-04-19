@@ -1,6 +1,11 @@
 from typing import List, Dict, Any
 from pydantic import BaseModel, Field
 
+class QueryRequest(BaseModel):
+    """
+    Model for a query.
+    """
+    query: str = Field(description="Query")
 class Docs(BaseModel):
     """
     Model for a document.
