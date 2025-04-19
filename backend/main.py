@@ -1,15 +1,10 @@
 import logging
-import traceback
-import json
-import os
 
-from dotenv import load_dotenv
-from fastapi import FastAPI, Request, Response, HTTPException
+from fastapi import FastAPI, Response, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from response_model import QueryResponse
 
-from input_class import EmbedRequest
-from utils.api_helper import get_top_k
+from utils.api_helper import get_results, convert_to_query_response
 
 app = FastAPI(title="Backend for stocks opinion analysis")
 
@@ -36,3 +31,29 @@ app.add_middleware(
 @app.get("/ping")
 async def ping():
     return Response(content="pong", status_code=200)
+
+@app.post("/api/query")
+async def query(query: str) -> QueryResponse:
+    if not query:
+        raise HTTPException(status_code=400, detail="Query cannot be empty")
+    logger.info(f"Query: {query}")
+
+    try:
+        # send query to solr and get relevant matches
+        results, keywords = get_results(query)
+        logger.info(f"Results: {results}")
+
+        # convert solr response to query response
+        recordCount, subredits, comments = convert_to_query_response(results)
+
+        return QueryResponse(
+            sentiment="positive",
+            comments=comments,
+            keywords=keywords,
+            subreddits=subredits,
+            recordCount=recordCount,
+        )
+    
+    except Exception as e:
+        logger.error(f"Error: {e}")
+        raise HTTPException(status_code=500, detail="Internal server error")
