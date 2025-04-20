@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Search, TrendingUp, TrendingDown, LineChart, MessageSquare, Hash, Database, Tag, AlertCircle } from 'lucide-react';
-import { ApiClient, QueryResponse} from './services/api';
+import { ApiClient, QueryResponse } from './services/api';
 
 interface Comment {
   text: string;
-  platform: string;
+  sentiment: string;
 }
 
 interface Keyword {
@@ -13,11 +13,37 @@ interface Keyword {
   count: number;
 }
 
+const FILTER_OPTIONS_SUBREDDIT = [
+  'tigerbrokers_official',
+  'webull',
+  'TigerBrokers',
+  'singaporefi',
+  'ibkr',
+  'moomoo_official',
+  'Etoro',
+  'RobinHood',
+  'plus500',
+  'Fidelity',
+  'thinkorswim',
+  'InteractiveBrokers',
+  'TradeStation',
+  'CharlesSchwab',
+  'vanguard',
+  'merrilledge',
+  'etrade',
+  'tdameritrade',
+  'Trading212',
+  'RevolutTrading',
+  'FreetradeApp',
+  'Wealthsimple'
+];
 
 function App() {
   const [query, setQuery] = useState('');
+  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
+  const [selectedSubreddits, setSelectedSubreddits] = useState<string[]>(['']);
   const [queryError, setQueryError] = useState('');
-  const [sentiment, setSentiment] = useState<'bullish' | 'bearish' | null>(null);
+  const [sentiment, setSentiment] = useState<'positive' | 'bearish' | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [comments, setComments] = useState<Comment[]>([]);
   const [subreddits, setSubreddits] = useState<string[]>([]);
@@ -25,13 +51,20 @@ function App() {
   const [keywords, setKeywords] = useState<Keyword[]>([]);
   const [apiError, setApiError] = useState<string | null>(null);
 
+  const toggleSubreddit = (subreddit: string) => {
+    setSelectedSubreddits(prev => {
+      if (prev.includes(subreddit)) {
+        return prev.filter(s => s !== subreddit);
+      } else {
+        return [...prev, subreddit];
+      }
+    });
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    console.log('Query submitted:', query);
-
-    //Query validation here
-    if(!query.trim()) {
+    if (!query.trim()) {
       setQueryError('Please enter a valid query');
       return;
     }
@@ -39,7 +72,15 @@ function App() {
     setApiError(null);
     setIsLoading(true);
 
-    try{
+    try {
+      // Prepare the payload according to your requirements
+      const payload = {
+        query: query,
+        subreddit: selectedSubreddits,
+        date: selectedDate
+      };
+
+      console.log('Sending payload:', payload);
       const response = await ApiClient.getQueryResponse(query);
 
       console.log('getQueryResponse response:', response);
@@ -49,7 +90,7 @@ function App() {
       setSubreddits(response.subreddits);
       setRecordCount(response.recordCount);
       setKeywords(response.keywords);
-    } catch(error){
+    } catch (error) {
       console.error('Error fetching query response:', error);
       setApiError('Failed to fetch data. Please try again later.');
     } finally {
@@ -76,7 +117,8 @@ function App() {
           animate={{ opacity: 1, y: 0 }}
           className="bg-gray-800 rounded-xl p-8 shadow-2xl mb-8"
         >
-          <form onSubmit={handleSubmit} className="mb-8">
+          <form onSubmit={handleSubmit} className="space-y-6">
+            {/* Query Input */}
             <div className="relative">
               <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400" />
               <input
@@ -86,23 +128,74 @@ function App() {
                 placeholder="Enter Query"
                 className="w-full pl-12 pr-4 py-3 bg-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
               />
-              <motion.button
-                whileTap={{ scale: 0.98 }}
-                type="submit"
-                className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-blue-500 text-white px-4 py-1 rounded-md hover:bg-blue-600 transition-colors"
-                disabled={isLoading}
-              >
-                Submit
-              </motion.button>
+              {queryError && (
+                <motion.div
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="flex items-center gap-2 mt-2 text-red-400"
+                >
+                  <AlertCircle className="w-4 h-4" />
+                  <span className="text-sm">{queryError}</span>
+                </motion.div>
+              )}
             </div>
-            {queryError && (
+
+            {/* Date Filter */}
+            <div className="relative">
+              <label className="block text-sm font-medium text-gray-300 mb-2">Date Filter</label>
+              <input
+                type="date"
+                value={selectedDate}
+                onChange={(e) => setSelectedDate(e.target.value)}
+                className="w-full px-4 py-3 bg-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all text-white"
+              />
+            </div>
+
+            {/* Subreddit Filter Buttons */}
+            <div className="space-y-2">
+              <label className="block text-sm font-medium text-gray-300 mb-2">Select Subreddits</label>
+              <div className="flex flex-wrap gap-2">
+                {FILTER_OPTIONS_SUBREDDIT.map((subreddit) => (
+                  <motion.button
+                    key={subreddit}
+                    type="button"
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={() => toggleSubreddit(subreddit)}
+                    className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
+                      selectedSubreddits.includes(subreddit)
+                        ? 'bg-blue-500 text-white'
+                        : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                    }`}
+                  >
+                    r/{subreddit}
+                  </motion.button>
+                ))}
+              </div>
+              {selectedSubreddits.length === 0 && (
+                <p className="text-sm text-yellow-400 mt-2">Please select at least one subreddit</p>
+              )}
+            </div>
+
+            {/* Submit Button */}
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              type="submit"
+              className="w-full bg-blue-500 text-white px-6 py-3 rounded-lg hover:bg-blue-600 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+              disabled={isLoading || selectedSubreddits.length === 0}
+            >
+              {isLoading ? 'Analyzing...' : 'Analyze'}
+            </motion.button>
+
+            {apiError && (
               <motion.div
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
                 className="flex items-center gap-2 mt-2 text-red-400"
               >
                 <AlertCircle className="w-4 h-4" />
-                <span className="text-sm">{queryError}</span>
+                <span className="text-sm">{apiError}</span>
               </motion.div>
             )}
           </form>
@@ -116,7 +209,7 @@ function App() {
               <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
             </motion.div>
           ) : (
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mt-8">
               {/* Sentiment Section */}
               {sentiment && (
                 <motion.div
@@ -126,10 +219,10 @@ function App() {
                 >
                   <motion.div
                     className={`inline-flex items-center justify-center p-8 rounded-full ${
-                      sentiment === 'bullish' ? 'bg-green-500/20' : 'bg-red-500/20'
+                      sentiment === 'positive' ? 'bg-green-500/20' : 'bg-red-500/20'
                     }`}
                   >
-                    {sentiment === 'bullish' ? (
+                    {sentiment === 'positive' ? (
                       <TrendingUp className="w-24 h-24 text-green-500" />
                     ) : (
                       <TrendingDown className="w-24 h-24 text-red-500" />
@@ -139,7 +232,7 @@ function App() {
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     className={`text-3xl font-bold mt-4 ${
-                      sentiment === 'bullish' ? 'text-green-500' : 'text-red-500'
+                      sentiment === 'positive' ? 'text-green-500' : 'text-red-500'
                     }`}
                   >
                     {sentiment.toUpperCase()}
@@ -231,7 +324,7 @@ function App() {
                       >
                         <p className="text-gray-300">{comment.text}</p>
                         <span className="text-sm text-blue-400 mt-2 inline-block">
-                          {comment.platform}
+                          {comment.sentiment}
                         </span>
                       </motion.div>
                     ))}
