@@ -2,9 +2,9 @@ import pysolr
 import spacy
 import json
 from collections import Counter
-from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.feature_extraction.text import TfidfVectorizer, CountVectorizer
+from sklearn.decomposition import LatentDirichletAllocation
 from sentence_transformers import SentenceTransformer, util
-from textblob import TextBlob
 from typing import List, Any, Tuple
 from response_model import SolrResponse, Comment, Keyword
 
@@ -12,8 +12,6 @@ from response_model import SolrResponse, Comment, Keyword
 BASE_URL = "http://solr:8983/solr/reddit/" # Solr base URL
 model = SentenceTransformer('all-MiniLM-L6-v2')
 nlp_en = spacy.load("en_core_web_sm") #spacy model for NLP tasks
-config = json.load(open("../models/classification/config.json")) # load mddel config file
-
 
 def connect_to_solr():
     """
@@ -26,7 +24,7 @@ def connect_to_solr():
 
     return pysolr.Solr(BASE_URL, always_commit=True, timeout=10), default_params
 
-def get_keywords_from_spacy_and_tfidf(documents: List[str]) -> List[Keyword]:
+def get_keywords_from_spacy_and_LDA(documents: List[str]) -> List[Keyword]:
     """
     Uses spacy for smarter tokenization and extract keywords from documentsu using tfidf as well
     :param documents: list of documents to extract keywords from
@@ -43,21 +41,29 @@ def get_keywords_from_spacy_and_tfidf(documents: List[str]) -> List[Keyword]:
         ]
         processed_docs.append(" ".join(tokens))
 
-    # Use TF-IDF to extract keywords
-    tfidf = TfidfVectorizer()
-    tfidf_matrix = tfidf.fit_transform(processed_docs)
-    feature_names = tfidf.get_feature_names_out()
-    tfidf_scores = tfidf_matrix.sum(axis=0).A1
+    # Create CountVectorizer from cleaned text
+    vectorizer = CountVectorizer(max_df=0.95, min_df=2, stop_words='english')
+    X = vectorizer.fit_transform(processed_docs)
 
-    feature_scores = list(zip(feature_names, tfidf_scores))
-    top_feature_names = sorted(feature_scores, key=lambda x: x[1], reverse=True)[:20]
+    # Apply LDA
+    lda = LatentDirichletAllocation(n_components=5, random_state=42)
+    lda.fit(X)
 
-    # find the occurence of top features names from the vocab
-    vocab = tfidf.vocabulary_
-    sorted_scores = [(feature, vocab[feature]) for feature, score in top_feature_names]
+    # Get top words per topic
+    feature_names = vectorizer.get_feature_names_out()
+    top_keywords = set()
 
-    keywords = [Keyword(keyword=keyword, count=score) for keyword, score in sorted_scores]
-    return keywords
+    for topic_idx, topic in enumerate(lda.components_):
+        top_word_indices = topic.argsort()[:-20 - 1:-1]
+        top_words = [feature_names[i] for i in top_word_indices]
+        top_keywords.update(top_words)
+
+    # Count occurrences in the original corpus
+    word_counts = Counter(" ".join(processed_docs).split())
+    
+    # Build Keyword objects
+    keywords = [Keyword(keyword=word, count=word_counts[word]) for word in top_keywords if word in word_counts]
+    return sorted(keywords, key=lambda x: x.count, reverse=True)
 
 def extract_keywords_semantic(query: str, documents: List[str]) -> List[Keyword]:
     """
@@ -90,7 +96,7 @@ def extract_keywords_semantic(query: str, documents: List[str]) -> List[Keyword]
 
     return [Keyword(keyword=keyword, count=keyword_counts[keyword]) for keyword, _ in sorted_keywords if keyword in keyword_counts]
 
-def get_results(query: str,subreddits: List[str], start_date: str) -> Tuple[SolrResponse, List[Keyword]]:
+def get_results(query: str, subreddits: List[str], start_date: str) -> Tuple[SolrResponse, List[Keyword]]:
     """
     Get results and top keywords from solr
     :param query: query to search for
@@ -109,7 +115,7 @@ def get_results(query: str,subreddits: List[str], start_date: str) -> Tuple[Solr
         fq.append(f"{subreddit_query}")
     if start_date:
         fq.append(f"datetime:[{start_date} TO *]")
-    # Add filters to the params
+    #Add filters to the params
     params["fq"] = fq
     try:
         results = solr.search(query, **params)
@@ -119,9 +125,13 @@ def get_results(query: str,subreddits: List[str], start_date: str) -> Tuple[Solr
         documents = [doc.get("comment_content", "") for doc in solr_response["docs"]]
 
         # Step 1: Get TF-IDF-based keyword extraction
-        tfidf_keywords = get_keywords_from_spacy_and_tfidf(documents)
+        tfidf_keywords = get_keywords_from_spacy_and_LDA(documents)
         # Step 2: Get semantic keyword extraction
-        semantic_keywords = extract_keywords_semantic(query, documents)
+        query = query.replace("comment_content:", "")
+        fq_string = fq[0].replace("comment_content:", "")
+        fq = fq_string.replace(" OR ", " ")
+        semantic_query = query + " " + fq
+        semantic_keywords = extract_keywords_semantic(semantic_query, documents)
         
         # Create dictionaries for fast look-up
         tfidf_dict = {kw.keyword: kw.count for kw in tfidf_keywords}
@@ -174,4 +184,4 @@ def get_sentiment(text: str) -> str:
     """
     Get sentiment of text
     """
-    
+    pass

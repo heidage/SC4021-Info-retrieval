@@ -6,8 +6,8 @@ class QueryRequest(BaseModel):
     Model for a query.
     """
     query: str = Field(description="Query")
-    subreddits: List[str] = Field(description="List of subreddits chosen by user to search in")
-    start_date: str = Field(description="Start date in ISO format")
+    subreddits: List[str] | None = Field(description="List of subreddits chosen by user to search in")
+    start_date: str | None = Field(description="Start date in ISO format")
 class Docs(BaseModel):
     """
     Model for a document.
