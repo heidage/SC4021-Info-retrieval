@@ -1,9 +1,9 @@
 import axios from 'axios';
 
 export interface Comment {
-    text: string;
-    platform: string;
-  }
+  text: string;
+  sentiment: string;
+}
   
   export interface Keyword {
     text: string;
@@ -11,7 +11,7 @@ export interface Comment {
   }
   
   export interface QueryResponse {
-    sentiment: 'bullish' | 'bearish';
+    sentiment: 'positive' | 'negative';
     comments: Comment[];
     keywords: Keyword[];
     subreddits: string[];
@@ -33,11 +33,11 @@ export interface Comment {
         return new Promise((resolve) => {
           setTimeout( () => {
             resolve({
-              sentiment: 'bullish',
+              sentiment: 'positive',
               comments: [
-                { text: "IBKR's interface is much better for trading options", platform: "IBKR" },
-                { text: "Tiger's mobile app has improved significantly", platform: "TigerBrokers" },
-                { text: "The execution speed on IBKR is unmatched", platform: "IBKR" },
+                { text: "IBKR's interface is much better for trading options", sentiment: "Positive" },
+                { text: "Tiger's mobile app has improved significantly", sentiment: "Positive" },
+                { text: "The execution speed on IBKR is unmatched", sentiment: "Positive" },
               ],
               keywords: [
                 { text: "interface", count: 45 },
