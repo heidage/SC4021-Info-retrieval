@@ -37,6 +37,8 @@ async def ping():
 @app.post("/api/query", response_model=QueryResponse)
 async def query(query_request: QueryRequest = Body(...)) -> QueryResponse:
     query = query_request.query
+    platforms = query_request.subreddits
+    start_date = query_request.start_date
 
     if not query:
         raise HTTPException(status_code=400, detail="Query cannot be empty")
@@ -44,17 +46,17 @@ async def query(query_request: QueryRequest = Body(...)) -> QueryResponse:
     logger.info(f"Query: {query}")
     try:
         # send query to solr and get relevant matches
-        results, keywords = get_results(query)
+        results, keywords = get_results(query, platforms, start_date)
         logger.info(f"Results: {results}")
 
         # convert solr response to query response
-        recordCount, subredits, comments = convert_to_query_response(results)
+        recordCount, subreddits, comments = convert_to_query_response(results)
 
         return QueryResponse(
             sentiment="positive",
             comments=comments,
             keywords=keywords,
-            subreddits=subredits,
+            subreddits=subreddits,
             recordCount=recordCount,
         )
     

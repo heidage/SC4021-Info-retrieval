@@ -86,7 +86,7 @@ def extract_keywords_semantic(query: str, documents: List[str]) -> List[Keyword]
 
     return [Keyword(keyword=keyword, count=keyword_counts[keyword]) for keyword, _ in sorted_keywords if keyword in keyword_counts]
 
-def get_results(query: str, additional_params: dict = None) -> Tuple[SolrResponse, List[Keyword]]:
+def get_results(query: str,subreddits: List[str], start_date: str) -> Tuple[SolrResponse, List[Keyword]]:
     """
     Get results and top keywords from solr
     :param query: query to search for
@@ -96,11 +96,17 @@ def get_results(query: str, additional_params: dict = None) -> Tuple[SolrRespons
     solr, default_params = connect_to_solr()
     params = default_params.copy()
 
-    # merge in additional query params if needed
-    if additional_params:
-        params.update(additional_params)
-
-    query = "comment_content:" + query + " AND (good OR great OR amazing OR bad OR terrible OR worst)"
+    query = "comment_content:" + query
+    
+    # Add additional filters to the query
+    fq = ["comment_content:good OR comment_content:great OR comment_content:bad OR comment_content:terrible"]
+    if subreddits:
+        subreddit_query = " OR ".join([f"subreddit:{subreddit}" for subreddit in subreddits])
+        fq.append(f"{subreddit_query}")
+    if start_date:
+        fq.append(f"datetime:[{start_date} TO *]")
+    # Add filters to the params
+    params["fq"] = fq
     try:
         results = solr.search(query, **params)
         raw_response = results.raw_response
