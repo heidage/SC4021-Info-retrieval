@@ -26,10 +26,10 @@ export interface Comment {
 
         
         // Placeholder till the backend is finished
-        const response = await axios.post('http://localhost:8000/api/query', {query})
-        // const response = await axios.post('http://backend:8000/api/query', {query})
-        console.log('Response from backend:', response.data);
-        return response.data;
+        // const response = await axios.post('http://localhost:8000/api/query', {query})
+        // // const response = await axios.post('http://backend:8000/api/query', {query})
+        // console.log('Response from backend:', response.data);
+        // return response.data;
 
 
         // DUMMY DATA
@@ -43,12 +43,12 @@ export interface Comment {
                 { text: "The execution speed on IBKR is unmatched", sentiment: "Positive" },
               ],
               keywords: [
-                { text: "interface", count: 45 },
-                { text: "trading", count: 38 },
-                { text: "this", count: 32 },
-                { text: "is", count: 28 },
-                { text: "dummy", count: 25 },
-                { text: "data", count: 2 },
+                { keyword: "interface", count: 45 },
+                { keyword: "trading", count: 38 },
+                { keyword: "this", count: 32 },
+                { keyword: "is", count: 28 },
+                { keyword: "dummy", count: 25 },
+                { keyword: "data", count: 2 },
               ],
               subreddits: ['r/investing', 'r/stocks', 'r/options'],
               recordCount: 100

@@ -41,9 +41,9 @@ const FILTER_OPTIONS_SUBREDDIT = [
 function App() {
   const [query, setQuery] = useState('');
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
-  const [selectedSubreddits, setSelectedSubreddits] = useState<string[]>(['']);
+  const [selectedSubreddits, setSelectedSubreddits] = useState<string[]>([]);
   const [queryError, setQueryError] = useState('');
-  const [sentiment, setSentiment] = useState<'positive' | 'bearish' | null>(null);
+  const [sentiment, setSentiment] = useState<'positive' | 'negative' | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [comments, setComments] = useState<Comment[]>([]);
   const [subreddits, setSubreddits] = useState<string[]>([]);
@@ -172,9 +172,6 @@ function App() {
                   </motion.button>
                 ))}
               </div>
-              {selectedSubreddits.length === 0 && (
-                <p className="text-sm text-yellow-400 mt-2">Please select at least one subreddit</p>
-              )}
             </div>
 
             {/* Submit Button */}
@@ -183,7 +180,7 @@ function App() {
               whileTap={{ scale: 0.98 }}
               type="submit"
               className="w-full bg-blue-500 text-white px-6 py-3 rounded-lg hover:bg-blue-600 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
-              disabled={isLoading || selectedSubreddits.length === 0}
+              disabled={isLoading}
             >
               {isLoading ? 'Analyzing...' : 'Analyze'}
             </motion.button>
