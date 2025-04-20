@@ -1,6 +1,14 @@
 import pysolr
 import spacy
+import torch
 import datetime
+import os
+
+from Classification.NeuralNets.models import build_model
+from Classification.NeuralNets.utils.tokenizer import build_tokenizer
+from Classification.NeuralNets.trainer import TrainingArgs
+from Classification.NeuralNets.dataloader import get_dataloaders_from_list
+
 from collections import Counter
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.decomposition import LatentDirichletAllocation
@@ -12,6 +20,30 @@ BASE_URL = "http://localhost:8983/solr/mycollection/"
 # BASE_URL = "http://solr:8983/solr/reddit/" # Solr base URL
 model = SentenceTransformer('all-MiniLM-L6-v2')
 nlp_en = spacy.load("en_core_web_sm") #spacy model for NLP tasks
+with open("/home/johntoro/code/SC4021-Info-retrieval/experiments/n_layers/bigru_layer=1/config.json", 'r') as f:
+    config = json.load(f) # load mddel config file
+model_path = "/home/johntoro/code/SC4021-Info-retrieval/experiments/n_layers/bigru_layer=1/model.pth"# load model path
+
+training_args = TrainingArgs(
+**config["trainer_args"]
+)
+tokenizer = build_tokenizer(config["tokenizer_config"])
+
+aggregation = config['model_config']['args'].get('aggregation', 'last')
+if aggregation=='attention':
+    config['model_config']['args']['attention'] = True
+
+model_type = config['model_config']['model_type']
+model = build_model(config["model_config"], tokenizer=tokenizer)
+if os.path.exists(model_path):
+    model.load_state_dict(torch.load(model_path, weights_only=True))
+    model.to("cuda")
+    model.eval()
+else:
+    raise ValueError('Model file does not exist. Please perform the training step first')
+
+tokenizer = build_tokenizer(config["tokenizer_config"])
+
 
 def connect_to_solr():
     """
@@ -34,7 +66,8 @@ def get_keywords_from_spacy_and_LDA(documents: List[str]) -> List[Keyword]:
     processed_docs = []
 
     for doc in documents:
-        spacy_doc = nlp_en(doc.lower())
+        # spacy_doc = nlp_en(doc.lower())
+        spacy_doc = [""]
         tokens = [
             token.lemma_ for token in spacy_doc 
             if not token.is_stop and not token.is_punct and token.is_alpha and len(token.lemma_) > 2
@@ -78,7 +111,8 @@ def extract_keywords_semantic(query: str, documents: List[str]) -> List[Keyword]
     """
     # combine documents for simplicity
     full_text = " ".join(documents)
-    spacy_doc = nlp_en(full_text.lower())
+    # spacy_doc = nlp_en(full_text.lower())
+    spacy_doc = [""]
     candidates = list(set([
         token.lemma_ for token in spacy_doc
         if not token.is_stop and not token.is_punct and token.is_alpha and len(token.lemma_) > 2
@@ -184,7 +218,7 @@ def convert_to_query_response(solr_response: SolrResponse) -> Tuple[int, List[st
         subreddits.add(doc.subreddit)
         comments.append({
             "text": doc.comment_content,
-            "sentiment": "postitive" #TODO: add sentiment analysis
+            "sentiment": get_sentiment(doc.comment_content)
         })
 
     return recordCount, list(subreddits), comments
@@ -194,4 +228,45 @@ def get_sentiment(text: str) -> str:
     """
     Get sentiment of text
     """
-    pass
+    input_lst = [text]
+    infer_loader = get_dataloaders_from_list(
+        input_lst,
+        bs=1,
+        tokenizer=tokenizer, 
+        dataset_args=config["data_config"], 
+        training_args=training_args
+    )
+    outs = []
+    for input, length in infer_loader:
+        input = input.to("cuda")
+        with torch.no_grad():
+            output = model(input)
+    output = output.to("cpu")
+    print("size:", output.size())
+    print("Model type", model_type)
+    print("Agg", aggregation)
+    if model_type!='CNN':
+        if aggregation=='last':
+            output = output[range(input.size()[0]), length - 1]
+            print("last: ", output.shape)
+        elif aggregation=='mean':
+            output = torch.mean(output, axis=1)
+        elif aggregation=='max':
+            output = torch.max(output, axis=1).values
+    
+    outs.extend(output.tolist())
+    out = outs[0]
+    # softmax
+    out = torch.nn.functional.softmax(torch.tensor(out), dim=0)
+    # get the index of the max value
+    index = torch.argmax(out).item()
+    print("out", out)
+    print("index", index)
+    if index == 0:
+        return "negative"
+    elif index == 1:
+        return "neutral"
+    elif index == 2:
+        return "positive"
+    # get the value of the max value
+    
