@@ -1,8 +1,10 @@
 import pysolr
 import spacy
+import json
 from collections import Counter
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sentence_transformers import SentenceTransformer, util
+from textblob import TextBlob
 from typing import List, Any, Tuple
 from response_model import SolrResponse, Comment, Keyword
 
@@ -10,6 +12,8 @@ from response_model import SolrResponse, Comment, Keyword
 BASE_URL = "http://solr:8983/solr/reddit/" # Solr base URL
 model = SentenceTransformer('all-MiniLM-L6-v2')
 nlp_en = spacy.load("en_core_web_sm") #spacy model for NLP tasks
+config = json.load(open("../models/classification/config.json")) # load mddel config file
+
 
 def connect_to_solr():
     """
@@ -164,3 +168,10 @@ def convert_to_query_response(solr_response: SolrResponse) -> Tuple[int, List[st
         })
 
     return recordCount, list(subreddits), comments
+
+# TODO: add sentiment analysis
+def get_sentiment(text: str) -> str:
+    """
+    Get sentiment of text
+    """
+    
