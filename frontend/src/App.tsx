@@ -81,7 +81,7 @@ function App() {
       };
 
       console.log('Sending payload:', payload);
-      const response = await ApiClient.getQueryResponse(query);
+      const response = await ApiClient.getQueryResponse(payload);
 
       console.log('getQueryResponse response:', response);
 
