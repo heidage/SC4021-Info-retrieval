@@ -1,13 +1,14 @@
 import pysolr
 import spacy
 import torch
+import json
 import datetime
 import os
 
-from Classification.NeuralNets.models import build_model
-from Classification.NeuralNets.utils.tokenizer import build_tokenizer
-from Classification.NeuralNets.trainer import TrainingArgs
-from Classification.NeuralNets.dataloader import get_dataloaders_from_list
+from NeuralNets.models import build_model
+from NeuralNets.utils.tokenizer import build_tokenizer
+from NeuralNets.trainer import TrainingArgs
+from NeuralNets.dataloader import get_dataloaders_from_list
 
 from collections import Counter
 from sklearn.feature_extraction.text import CountVectorizer
@@ -20,9 +21,9 @@ BASE_URL = "http://localhost:8983/solr/mycollection/"
 # BASE_URL = "http://solr:8983/solr/reddit/" # Solr base URL
 model = SentenceTransformer('all-MiniLM-L6-v2')
 nlp_en = spacy.load("en_core_web_sm") #spacy model for NLP tasks
-with open("/home/johntoro/code/SC4021-Info-retrieval/experiments/n_layers/bigru_layer=1/config.json", 'r') as f:
+with open("../models/classification/config.json", 'r') as f:
     config = json.load(f) # load mddel config file
-model_path = "/home/johntoro/code/SC4021-Info-retrieval/experiments/n_layers/bigru_layer=1/model.pth"# load model path
+model_path = "../models/classification/model.pth"# load model path
 
 training_args = TrainingArgs(
 **config["trainer_args"]
@@ -264,9 +265,7 @@ def get_sentiment(text: str) -> str:
     print("index", index)
     if index == 0:
         return "negative"
-    elif index == 1:
-        return "neutral"
-    elif index == 2:
-        return "positive"
+    else:
+        return positive
     # get the value of the max value
     
