@@ -47,7 +47,6 @@ async def query(query_request: QueryRequest = Body(...)) -> QueryResponse:
     try:
         # send query to solr and get relevant matches
         results, keywords = get_results(query, platforms, start_date)
-        logger.info(f"Results: {results}")
 
         # convert solr response to query response
         recordCount, subreddits, comments = convert_to_query_response(results)
