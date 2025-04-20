@@ -28,21 +28,21 @@ services:
                   "http://solr:8983/solr/mycollection/update?commit=true";
               echo "✅ Done!";
     
-    backend:
-        build:
-            context: ./backend
-            dockerfile: ./build/Dockerfile
-        image: backend
-        volumes:
-            - ./backend/models:/models
-        ports:
-            - '8000:8000'
+    # backend:
+    #     build:
+    #         context: ./backend
+    #         dockerfile: ./build/Dockerfile
+    #     image: backend
+    #     volumes:
+    #         - ./backend/models:/models
+    #     ports:
+    #         - '8000:8000'
 
-    frontend:  
-        build:
-            context: ./frontend
-            dockerfile: ./build/Dockerfile
-        image: frontend
-        ports:
-            - "5173:5173"
+    # frontend:  
+    #     build:
+    #         context: ./frontend
+    #         dockerfile: ./build/Dockerfile
+    #     image: frontend
+    #     ports:
+    #         - "5173:5173"
 

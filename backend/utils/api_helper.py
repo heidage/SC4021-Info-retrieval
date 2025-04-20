@@ -1,15 +1,15 @@
 import pysolr
 import spacy
-import json
+import datetime
 from collections import Counter
-from sklearn.feature_extraction.text import TfidfVectorizer, CountVectorizer
+from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.decomposition import LatentDirichletAllocation
 from sentence_transformers import SentenceTransformer, util
 from typing import List, Any, Tuple
 from response_model import SolrResponse, Comment, Keyword
 
-# BASE_URL = "http://localhost:8983/solr/mycollection/"
-BASE_URL = "http://solr:8983/solr/reddit/" # Solr base URL
+BASE_URL = "http://localhost:8983/solr/mycollection/"
+# BASE_URL = "http://solr:8983/solr/reddit/" # Solr base URL
 model = SentenceTransformer('all-MiniLM-L6-v2')
 nlp_en = spacy.load("en_core_web_sm") #spacy model for NLP tasks
 
@@ -26,7 +26,7 @@ def connect_to_solr():
 
 def get_keywords_from_spacy_and_LDA(documents: List[str]) -> List[Keyword]:
     """
-    Uses spacy for smarter tokenization and extract keywords from documentsu using tfidf as well
+    Uses spacy for smarter tokenization and extract keywords from documentsu using lda as well
     :param documents: list of documents to extract keywords from
     :param top_k: number of top keywords to extract
     :return: list of keywords
@@ -42,7 +42,10 @@ def get_keywords_from_spacy_and_LDA(documents: List[str]) -> List[Keyword]:
         processed_docs.append(" ".join(tokens))
 
     # Create CountVectorizer from cleaned text
-    vectorizer = CountVectorizer(max_df=0.95, min_df=2, stop_words='english')
+    if len(processed_docs) < 2:
+        vectorizer = CountVectorizer(max_df=1.0, min_df=1, stop_words='english')
+    else:
+        vectorizer = CountVectorizer(max_df=0.95, min_df=2, stop_words='english')
     X = vectorizer.fit_transform(processed_docs)
 
     # Apply LDA
@@ -110,10 +113,11 @@ def get_results(query: str, subreddits: List[str], start_date: str) -> Tuple[Sol
     
     # Add additional filters to the query
     fq = ["comment_content:good OR comment_content:great OR comment_content:bad OR comment_content:terrible"]
-    if subreddits:
+    if len(subreddits) > 0:
         subreddit_query = " OR ".join([f"subreddit:{subreddit}" for subreddit in subreddits])
         fq.append(f"{subreddit_query}")
-    if start_date:
+    # not todays date
+    if start_date != datetime.date.today().isoformat():
         fq.append(f"datetime:[{start_date} TO *]")
     #Add filters to the params
     params["fq"] = fq
@@ -122,10 +126,16 @@ def get_results(query: str, subreddits: List[str], start_date: str) -> Tuple[Sol
         raw_response = results.raw_response
         solr_response = raw_response["response"]
 
+        if len(solr_response["docs"]) == 0:
+            return SolrResponse(**solr_response), []
+
         documents = [doc.get("comment_content", "") for doc in solr_response["docs"]]
 
         # Step 1: Get TF-IDF-based keyword extraction
-        tfidf_keywords = get_keywords_from_spacy_and_LDA(documents)
+        if len(solr_response["docs"]) > 2:
+            lda_keywords = get_keywords_from_spacy_and_LDA(documents)
+        else:
+            lda_keywords = []
         # Step 2: Get semantic keyword extraction
         query = query.replace("comment_content:", "")
         fq_string = fq[0].replace("comment_content:", "")
@@ -134,20 +144,20 @@ def get_results(query: str, subreddits: List[str], start_date: str) -> Tuple[Sol
         semantic_keywords = extract_keywords_semantic(semantic_query, documents)
         
         # Create dictionaries for fast look-up
-        tfidf_dict = {kw.keyword: kw.count for kw in tfidf_keywords}
+        lda_dict = {kw.keyword: kw.count for kw in lda_keywords}
         semantic_dict = {kw.keyword: kw.count for kw in semantic_keywords}
 
         combined_scores = {}
-        all_keywords = set(tfidf_dict.keys()).union(semantic_dict.keys())
+        all_keywords = set(lda_dict.keys()).union(semantic_dict.keys())
 
         for keyword in all_keywords:
-            tfidf_score = tfidf_dict.get(keyword, 0)
+            lda_score = lda_dict.get(keyword, 0)
             semantic_score = semantic_dict.get(keyword, 0)
             # Boost keywords that appear in both extractions (e.g., multiply semantic score by 2)
-            if keyword in tfidf_dict and keyword in semantic_dict:
-                combined_score = tfidf_score + (semantic_score * 2)
+            if keyword in lda_dict and keyword in semantic_dict:
+                combined_score = lda_score + (semantic_score * 2)
             else:
-                combined_score = tfidf_score + semantic_score
+                combined_score = lda_score + semantic_score
             combined_scores[keyword] = combined_score
 
         # Convert back to Keyword objects
