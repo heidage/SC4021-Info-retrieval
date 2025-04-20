@@ -10,7 +10,7 @@ import torch.nn.functional as F
 from models import build_model
 from utils.tokenizer import build_tokenizer
 from trainer import Trainer, TrainingArgs, EarlyStopper
-from dataloader import get_dataloaders
+from dataloader import get_dataloaders_from_list
 import metrics
 from metrics import beautify
 
@@ -27,11 +27,11 @@ def checking_config(config):
     if config["model_config"]["args"]["embedding_strategy"] not in ["word2vec"]:
       raise ValueError("Word2vec tokenizer only supports word2vec embedding strategy, got: ", config["model_config"]["args"]["embedding_strategy"])
   
-  if config["model_config"]["args"]["embedding_strategy"] == "word2vec":
-    if config["model_config"]["args"]["pretrained_path"] is None:
-      raise ValueError("Please specify the path to the pretrained word2vec model")
-    if config["tokenizer_config"]["tokenizer_type"] != "word2vec":
-      raise ValueError("Word2Vec embedding strategy is not compatible with tokenizer, got: ", config["tokenizer_config"]["tokenizer_type"])
+  # if config["model_config"]["args"]["embedding_strategy"] == "word2vec":
+  #   if config["model_config"]["args"]["pretrained_path"] is None:
+  #     raise ValueError("Please specify the path to the pretrained word2vec model")
+  #   if config["tokenizer_config"]["tokenizer_type"] != "word2vec":
+  #     raise ValueError("Word2Vec embedding strategy is not compatible with tokenizer, got: ", config["tokenizer_config"]["tokenizer_type"])
     
   if config["model_config"]["args"]["embedding_strategy"] in ["word2vec"]:
     # have to specify the input_dim
@@ -52,12 +52,13 @@ def main():
   training_args = TrainingArgs(
     **config["trainer_args"]
   )
+  tokenizer = build_tokenizer(config["tokenizer_config"])
 
   aggregation = config['model_config']['args'].get('aggregation', 'last')
   if aggregation=='attention':
     config['model_config']['args']['attention'] = True
   model_type = config['model_config']['model_type']
-  model = build_model(config["model_config"])
+  model = build_model(config["model_config"], tokenizer=tokenizer)
   model_path = os.path.join(config['analysis_config']['output_dir'], 'model.pth')
   if os.path.exists(model_path):
     model.load_state_dict(torch.load(model_path, weights_only=True))
@@ -67,16 +68,19 @@ def main():
     raise ValueError('Model file does not exist. Please perform the training step first')
   
   tokenizer = build_tokenizer(config["tokenizer_config"])
-  train_loader, val_loader, test_loader = get_dataloaders(
+  input_lst = ["Am i stupid?"]
+  infer_loader = get_dataloaders_from_list(
+    input_lst,
+    bs=1,
     tokenizer=tokenizer, 
     dataset_args=config["data_config"], 
     training_args=training_args
   )
 
-
   metric_names = config['metric_config']['metrics']
   metric_dict = get_metrics_dict(metric_names)
-  for input, length, label in test_loader:
+  outs = []
+  for input, length in infer_loader:
     input = input.to("cuda")
     with torch.no_grad():
       output = model(input)
@@ -90,19 +94,10 @@ def main():
         output = torch.mean(output, axis=1)
       elif aggregation=='max':
         output = torch.max(output, axis=1).values
-    for metric_name, metric in metric_dict.items():
-      metric.update(output, label)
-  result_metrics = {
-    metric_name: metric.value() for metric_name, metric in metric_dict.items()
-    }
-  print(
-    f"""Test result:
-        Metrics: {beautify(result_metrics)}"""
-    )
-
-  result_file = os.path.join(config['analysis_config']['output_dir'], 'test_metric.json')
-  with open(result_file, 'w') as f:
-    json.dump(result_metrics, f, indent=4)
+    outs.extend(output.tolist())
+  for i, l in zip(input_lst, outs):
+    print(f"Input: {i}")
+    print(f"Output: {l}")
 
 
 if __name__ == "__main__":

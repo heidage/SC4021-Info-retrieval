@@ -1,20 +1,17 @@
 import logging
-import traceback
-import json
-import os
 
-from dotenv import load_dotenv
-from fastapi import FastAPI, Request, Response, HTTPException
+from fastapi import FastAPI, Response, HTTPException, Body
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from response_model import QueryResponse, QueryRequest
 
-from input_class import EmbedRequest
-from utils.api_helper import get_top_k
+from utils.api_helper import get_results, convert_to_query_response
 
 app = FastAPI(title="Backend for stocks opinion analysis")
 
 # add logging
 logger = logging.getLogger(__name__)
+logging.basicConfig(level=logging.DEBUG)
+
 ### handler ###
 handler = logging.StreamHandler()
 logger.addHandler(handler)
@@ -37,31 +34,31 @@ app.add_middleware(
 async def ping():
     return Response(content="pong", status_code=200)
 
-@app.post("/complete")
-async def complete_chat(request: Request, query: EmbedRequest):
-    '''
-    Endpoint to generate answer from prompt using LLM
+@app.post("/api/query", response_model=QueryResponse)
+async def query(query_request: QueryRequest = Body(...)) -> QueryResponse:
+    query = query_request.query
+    platforms = query_request.subreddits
+    start_date = query_request.start_date
 
-    Args:
-    - request: Incoming request object
-    - query: EmbedRequest object, input query from user
+    if not query:
+        raise HTTPException(status_code=400, detail="Query cannot be empty")
 
-    Returns:
-    - an array of top k documents from the index
-    '''
-    if not query.text:
-        raise HTTPException(status_code=400, detail="User needs to ask a question!")
-    
-    # Check accept header and see if frontend can accept out response type
-    accept_header = request.headers.get("accept")
-    if accept_header and "application/json" not in accept_header:
-        raise HTTPException(status_code=406, detail="Accept header must be application/json")
-    
-    #Generate response from LLM
+    logger.info(f"Query: {query}")
     try:
-        result = get_top_k(query.text)
-    except Exception as e:
-        logger.error(traceback.format_exc())
-        raise HTTPException(status_code=500, detail=str(e))
+        # send query to solr and get relevant matches
+        results, keywords = get_results(query, platforms, start_date)
+
+        # convert solr response to query response
+        recordCount, subreddits, comments = convert_to_query_response(results)
+
+        return QueryResponse(
+            sentiment="positive",
+            comments=comments,
+            keywords=keywords,
+            subreddits=subreddits,
+            recordCount=recordCount,
+        )
     
-    return JSONResponse(result)
+    except Exception as e:
+        logger.error(f"Error: {e}")
+        raise HTTPException(status_code=500, detail="Internal server error")

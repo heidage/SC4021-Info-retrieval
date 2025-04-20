@@ -119,7 +119,7 @@ class Trainer:
       analysis_config: dict,
       early_stopper: EarlyStopper,
       model_type: str,
-      aggregation: str,
+      aggregation: str
     ):
     self.args = training_args
     self.model = model
@@ -354,7 +354,7 @@ class Trainer:
         break
     if self.args.save_model:
       torch.save(self.model.state_dict(), os.path.join(self.output_dir, 'model.pth'))
-    self.test()
+    # self.test()
     self.save_metrics()
 
   def save_metrics(self):
