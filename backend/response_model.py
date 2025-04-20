@@ -6,8 +6,13 @@ class QueryRequest(BaseModel):
     Model for a query.
     """
     query: str = Field(description="Query")
-    subreddits: List[str] = Field(description="List of subreddits chosen by user to search in")
-    start_date: str = Field(description="Start date in ISO format")
+    subreddit: List[str] = Field(description="List of subreddits chosen by user to search in")
+    date: str = Field(description="Start date in ISO format")
+class QueryPayload(BaseModel):
+    """
+    Model for a query payload.
+    """
+    payload: QueryRequest = Field(description="Query payload")
 class Docs(BaseModel):
     """
     Model for a document.
