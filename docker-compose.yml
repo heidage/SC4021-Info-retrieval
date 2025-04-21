@@ -20,13 +20,18 @@ services:
             - sh
             - -c
             - |
-              echo "⏳ Waiting for Solr..."; 
-              sleep 10;
-              echo "🚀 Posting reddit_index.json to Solr...";
-              curl -H "Content-Type: application/json" \
-                  --data-binary "@/data/reddit_index.json" \
-                  "http://solr:8983/solr/mycollection/update?commit=true";
-              echo "✅ Done!";
+                echo "⏳ Waiting for Solr to be ready...";
+                until curl -s http://solr:8983/solr/admin/cores?action=STATUS | grep -q '"mycollection"'; do
+                echo "⌛ Still waiting for mycollection to load...";
+                sleep 5;
+                done
+                echo "✅ Solr is ready!";
+                echo "🚀 Posting reddit_index.json to Solr...";
+                curl -H "Content-Type: application/json" \
+                    --data-binary "@/data/reddit_index.json" \
+                    "http://solr:8983/solr/mycollection/update?commit=true";
+                echo "✅ Done!";
+
     
     backend:
         build:

@@ -3,6 +3,8 @@
 Building an opinion search engine on trading platforms (Which trading platform is the best?)
 
 ## Getting started
+Please ensure that you have machine with CUDA enabled GPU as it it necessary for the backend to startup and get working.
+
 ### Running the Application (with Automated Indexing)
 **1\. Create JSON dataset in respective folder**
 
@@ -55,6 +57,6 @@ To manually verify the indexed data:
 
 4\.  You should see a list of indexed documents in the response panel.
 
-Once the backend and frontend has been set up:
+Once the backend and frontend has been set up (you should see <http://0.0.0.0:8000> for backend and <http://localhost:5173> for frontend):
 1\. Visit: <http://localhost:5173> to see the frontend and test out the application
 2\. Visit: <http://localhost:8000/docs> to see the api endpoints for backend
