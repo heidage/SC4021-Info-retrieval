@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 from torch.autograd import Variable
 
-from Classification.NeuralNets.models.preembeddings import build_preembedding
+from NeuralNets.models.preembeddings import build_preembedding
 
 class RNNLayer(nn.Module):
   def __init__(self, dim_input, dim_hidden, dim_output, direction=1):

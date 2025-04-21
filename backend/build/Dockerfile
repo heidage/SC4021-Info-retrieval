@@ -2,11 +2,13 @@ FROM python:3.10-slim
 
 WORKDIR /app
 
-COPY . /app
+COPY requirements.txt .
 
-RUN pip install -r /app/build/requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt
 RUN pip install fastapi[standard] uvicorn
 RUN python -m spacy download en_core_web_sm
+
+COPY . .
 
 EXPOSE 8000
 

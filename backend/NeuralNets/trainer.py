@@ -8,8 +8,8 @@ import torch
 import torch.utils
 import torch.nn.functional as F
 import torch.nn as nn
-from Classification.NeuralNets import metrics
-from Classification.NeuralNets.metrics import beautify
+from NeuralNets import metrics
+from NeuralNets.metrics import beautify
 
 SUPPORTED_TASKS = ["classification", "causal"]
 class EarlyStopper:

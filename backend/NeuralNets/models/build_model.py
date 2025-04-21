@@ -1,6 +1,6 @@
 from typing import Dict
 from torch import nn
-from Classification.NeuralNets.models import (
+from NeuralNets.models import (
     RNN, 
     DeepRNN,
     BiDeepRNN, 

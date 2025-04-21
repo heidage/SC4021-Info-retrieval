@@ -34,8 +34,8 @@ export interface QueryPayload{
 
         
         // Placeholder till the backend is finished
-        const response = await axios.post('http://localhost:8000/api/query', {payload})
-        // const response = await axios.post('http://backend:8000/api/query', {query})
+        // const response = await axios.post('http://localhost:8000/api/query', {payload})
+        const response = await axios.post('http://backend:8000/api/query', {payload})
         console.log('Response from backend:', response.data);
         return response.data;
 

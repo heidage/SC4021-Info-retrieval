@@ -9,9 +9,9 @@ import torch
 from torch.utils.data import DataLoader
 from torch.nn.utils.rnn import pad_sequence
 
-from Classification.NeuralNets.utils.tokenizer import build_tokenizer, BaseTokenizer
-from Classification.NeuralNets.models import build_model
-from Classification.NeuralNets.trainer import TrainingArgs
+from NeuralNets.utils.tokenizer import build_tokenizer, BaseTokenizer
+from NeuralNets.models import build_model
+from NeuralNets.trainer import TrainingArgs
 
 SUPPORTED_TASKS = ["classification"]
 

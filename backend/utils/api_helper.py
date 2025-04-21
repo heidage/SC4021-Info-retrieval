@@ -17,8 +17,9 @@ from sentence_transformers import SentenceTransformer, util
 from typing import List, Any, Tuple
 from response_model import SolrResponse, Comment, Keyword
 
-BASE_URL = "http://localhost:8983/solr/mycollection/"
-# BASE_URL = "http://solr:8983/solr/reddit/" # Solr base URL
+# BASE_URL = "http://localhost:8983/solr/mycollection/"
+BASE_URL = "http://solr:8983/solr/reddit/" # Solr base URL
+
 model = SentenceTransformer('all-MiniLM-L6-v2')
 nlp_en = spacy.load("en_core_web_sm") #spacy model for NLP tasks
 with open("../models/classification/config.json", 'r') as f:
@@ -266,6 +267,6 @@ def get_sentiment(text: str) -> str:
     if index == 0:
         return "negative"
     else:
-        return positive
+        return "positive"
     # get the value of the max value
     
