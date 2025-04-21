@@ -3,12 +3,6 @@
 Building an opinion search engine on trading platforms (Which trading platform is the best?)
 
 ## Getting started
-
-1. Create models folder in backend folder: `/backend/models`
-2. Download [bge-large-en-v1.5](https://huggingface.co/BAAI/bge-large-en-v1.5) into models folder
-    - Make sure to install git lfs
-    - Run the command `git lfs install` after you have install git lfs and then run `git clone <url>`
-
 ### Running the Application (with Automated Indexing)
 **1\. Create JSON dataset in respective folder**
 
@@ -41,7 +35,7 @@ You should see `✅ Done.` in your logs.
 
 ---
 
-**3\. Verify Solr Indexing (Optional)**
+**3\. Verify Solr Indexing (Optional) and Runnning the application as a whole (Neccessary)**
 
 After running `docker-compose up --build`, you should see log messages like:
 
@@ -60,3 +54,7 @@ To manually verify the indexed data:
 3\.  Click **Execute Query**
 
 4\.  You should see a list of indexed documents in the response panel.
+
+Once the backend and frontend has been set up:
+1\. Visit: <http://localhost:5173> to see the frontend and test out the application
+2\. Visit: <http://localhost:8000/docs> to see the api endpoints for backend
