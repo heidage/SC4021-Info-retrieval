@@ -1,5 +1,6 @@
 import pysolr
 import spacy
+import nltk
 import torch
 import json
 import datetime
@@ -22,9 +23,12 @@ BASE_URL = "http://solr:8983/solr/reddit/" # Solr base URL
 
 model = SentenceTransformer('all-MiniLM-L6-v2')
 nlp_en = spacy.load("en_core_web_sm") #spacy model for NLP tasks
-with open("../models/classification/config.json", 'r') as f:
+nltk.download('punkt_tab')
+current_dir = os.path.dirname(os.path.abspath(__file__))
+config_path = os.path.join(current_dir, "../models/classification/config.json")
+model_path = os.path.join(current_dir, "../models/classification/model.pth")
+with open(config_path, 'r') as f:
     config = json.load(f) # load mddel config file
-model_path = "../models/classification/model.pth"# load model path
 
 training_args = TrainingArgs(
 **config["trainer_args"]
